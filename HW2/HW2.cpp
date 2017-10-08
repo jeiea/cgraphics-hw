@@ -1,6 +1,12 @@
+#include <Windows.h>
+#include <tchar.h>
 #include <GLFW/glfw3.h>
 
-int main(void)
+int APIENTRY _tWinMain(
+  HINSTANCE hInstance,
+  HINSTANCE hPrevInstance,
+  LPTSTR    lpCmdLine,
+  int       nCmdShow)
 {
   GLFWwindow* window;
 

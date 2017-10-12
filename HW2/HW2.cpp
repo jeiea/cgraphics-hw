@@ -1,4 +1,5 @@
 #include <iostream>
+#include <functional>
 #if _WIN32 || _WIN64
 #include <Windows.h>
 #include <tchar.h>
@@ -37,11 +38,6 @@ matrix<float> rotate2x2(float rad) {
   };
 }
 
-tuple<float, float> apply(matrix<float> mat, float x, float y) {
-  auto res = mat * matrix<float>{ { x }, { y } };
-  return { res[0][0], res[0][1] };
-}
-
 matrix<float> rotateY(float radian) {
   return {
     {cos(radian), 0, sin(radian)},
@@ -50,108 +46,107 @@ matrix<float> rotateY(float radian) {
   };
 }
 
-void onKeyInput(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-  if (action != GLFW_RELEASE) return;
+class GLWindow {
+public:
+  GLWindow(const char* title = nullptr, int width = 640, int height = 480);
 
-  switch (key) {
-  case GLFW_KEY_A:
-    break;
-  case GLFW_KEY_S:
-    break;
-  case GLFW_KEY_J:
-    break;
-  case GLFW_KEY_K:
-    break;
-  }
-}
+  bool bad() { return !window; };
 
-void onResize(GLFWwindow* win, int width, int height) {
-  if (height == 0) height = 1;   // To prevent divide by 0
-  GLfloat aspect = (GLfloat)width / (GLfloat)height;
+  virtual void onKeyInput(int key, int action) = 0;
 
   // Set the viewport to cover the new window
-  glViewport(0, 0, width, height);
+  virtual void onResize(int width, int height) {
+    glViewport(0, 0, width, height);
+  }
+
+  /* Make the window's context current */
+  void takeContext() { glfwMakeContextCurrent(window); }
+
+  bool shouldClose() { return glfwWindowShouldClose(window); }
+
+public:
+  GLFWwindow* window;
+};
+
+static void resizeHandler(GLFWwindow* window, int width, int height) {
+  auto win = static_cast<GLWindow*>(glfwGetWindowUserPointer(window));
+  win->onResize(width, height);
+}
+
+static void keyHandler(GLFWwindow* window, int key, int scancode, int action, int mods) {
+  auto win = static_cast<GLWindow*>(glfwGetWindowUserPointer(window));
+  win->onKeyInput(key, action);
+}
+
+GLWindow::GLWindow(const char* title, int width, int height) {
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+
+  /* Create a windowed mode window and its OpenGL context */
+  auto caption = title ? title : "OpenGL Window";
+  window = glfwCreateWindow(640, 480, caption, nullptr, nullptr);
+  if (!window) return;
+
+  glfwSetWindowUserPointer(window, this);
+  glfwSetFramebufferSizeCallback(window, resizeHandler);
+  glfwSetKeyCallback(window, keyHandler);
+
+  takeContext();
+}
+
+using torus = vector<vector<matrix<float>>>;
+
+class HW2Window : public GLWindow {
+public:
+  HW2Window() : GLWindow("HW2 - Drawing Torus", 640, 480) {
+    onResize(640, 480);
+  }
+
+  virtual void onResize(int width, int height);
+  virtual void onKeyInput(int key, int action);
+  void drawTorus();
+
+protected:
+  static torus torus;
+  int sweepZ = 18;
+  int sweepY = 36;
+};
+
+void HW2Window::onResize(int width, int height) {
+  GLWindow::onResize(width, height);
+
+  if (height == 0) height = 1;   // To prevent divide by 0
+  GLfloat aspect = (GLfloat)width / (GLfloat)height;
 
   // Set the aspect ratio of the clipping volume to match the viewport
   glMatrixMode(GL_PROJECTION);  // To operate on the Projection matrix
   glLoadIdentity();             // Reset
 
-  // Enable perspective projection with fovy, aspect, zNear and zFar
+  // Enable perspective projection
   double distance = 10;
   gluPerspective(45.0, aspect, 0.1, distance * 10);
   gluLookAt(distance, distance, distance, 0, 0, 0, -1, 1, -1);
 }
 
-void drawParallels() {
-  for (int i = -30; i <= 30; i++) {
-    glVertex3f(0.0f, 0.0f, 0.0f);
-    glVertex3f(100.0f, 0.0f, 0.0f);
-    glColor3f(0.0f, 1.0f, 0.0f);
-    glVertex3f(0.0f, 0.0f, 0.0f);
-    glVertex3f(0.0f, 100.0f, 0.0f);
-    glColor3f(0.0f, 1.0f, 1.0f);
-    glVertex3f(0.0f, 0.0f, 0.0f);
-    glVertex3f(0.0f, 0.0f, 100.0f);
-    glColor3f(1.0f, 0.0f, 0.0f);
+void HW2Window::onKeyInput(int key, int action)
+{
+  if (action != GLFW_RELEASE) return;
+
+  switch (key) {
+  case GLFW_KEY_A:
+    sweepY = min(36, sweepY + 1);
+    break;
+  case GLFW_KEY_S:
+    sweepY = max(0, sweepY - 1);
+    break;
+  case GLFW_KEY_J:
+    sweepZ = min(18, sweepZ + 1);
+    break;
+  case GLFW_KEY_K:
+    sweepZ = max(0, sweepZ - 1);
+    break;
   }
 }
-
-void drawRadiation() {
-  float part = PI / 20;
-  float r = 1000.0f;
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  //glTranslatef(1.0f, 0.0f, -7.0f);  // Move right and into the screen
-  glBegin(GL_LINES);
-  for (float t = 0; t < 2 * PI; t += part) {
-    //float blue = cos(t);
-    float x = cos(t);
-    float red = x / 2 + 0.5f;
-    for (float p = 0; p < 2 * PI; p += part) {
-      float y = sin(t) * cos(p);
-      float z = cos(t) * sin(p);
-      float red = (t + 1) / 2;
-      float green = (p + 1) / 2;
-      glColor3f(red, y / 2 + 0.5f, z / 2 + 0.5f);
-      //glColor3f(1, 1, 1);
-      glVertex3f(0, 0, 0);
-      glVertex3f(x * r, y * r, z * r);
-    }
-  }
-  glEnd();
-}
-
-void drawSphere() {
-  float part = PI / 20;
-  float r = 100.0f;
-  glBegin(GL_LINES);
-  for (float t = 0; t < 2 * PI; t += part) {
-    float x = cos(t);
-    float red = x / 2 + 0.5f;
-    for (float p = 0; p < 2 * PI; p += part) {
-      float y = sin(t) * cos(p);
-      float z = cos(t) * sin(p);
-    }
-  }
-  glEnd();
-}
-
-void DrawAxes() {
-  glBegin(GL_LINES);
-  glColor3f(1.0f, 0.0f, 0.0f);
-  glVertex3f(0.0f, 0.0f, 0.0f);
-  glVertex3f(100.0f, 0.0f, 0.0f);
-  glColor3f(0.0f, 1.0f, 0.0f);
-  glVertex3f(0.0f, 0.0f, 0.0f);
-  glVertex3f(0.0f, 100.0f, 0.0f);
-  glColor3f(0.0f, 1.0f, 1.0f);
-  glVertex3f(0.0f, 0.0f, 0.0f);
-  glVertex3f(0.0f, 0.0f, 100.0f);
-  glEnd();
-}
-
-using torus = vector<vector<matrix<float>>>;
 
 torus PrepareTorus() {
   const int angleZ = 18;
@@ -187,7 +182,9 @@ torus PrepareTorus() {
   return bRing;
 }
 
-void drawTorus(torus& torus, int sweepZ, int sweepY) {
+torus HW2Window::torus = PrepareTorus();
+
+void HW2Window::drawTorus() {
   int maxY = min(torus.size() - 1, sweepY);
   int maxZ = min(torus[0].size() - 1, sweepZ);
   auto glVertexMat = [](matrix<float>& v) {
@@ -224,7 +221,21 @@ void drawTorus(torus& torus, int sweepZ, int sweepY) {
   glEnd();
 }
 
-void onDraw() {
+void drawAxes() {
+  glBegin(GL_LINES);
+  glColor3f(1.0f, 0.0f, 0.0f);
+  glVertex3f(0.0f, 0.0f, 0.0f);
+  glVertex3f(100.0f, 0.0f, 0.0f);
+  glColor3f(0.0f, 1.0f, 0.0f);
+  glVertex3f(0.0f, 0.0f, 0.0f);
+  glVertex3f(0.0f, 100.0f, 0.0f);
+  glColor3f(0.0f, 1.0f, 1.0f);
+  glVertex3f(0.0f, 0.0f, 0.0f);
+  glVertex3f(0.0f, 0.0f, 100.0f);
+  glEnd();
+}
+
+void drawBackground() {
   /* Handler for window-repaint event.
   Called back when the window first appears and
   whenever the window needs to be re-painted. */
@@ -234,100 +245,48 @@ void onDraw() {
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
-  DrawAxes();
+  drawAxes();
 }
 
 int main() {
-  GLFWwindow* window;
-
   /* Initialize the library */
   if (!glfwInit()) {
     cerr << "OpenGL 초기화에 실패했습니다." << endl;
     return -1;
   }
 
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-
-  /* Create a windowed mode window and its OpenGL context */
-  window = glfwCreateWindow(640, 480, "HW2 - Drawing Torus", NULL, NULL);
-  if (!window)
+  HW2Window win;
+  if (win.bad())
   {
     cerr << "OpenGL 초기화에 실패했습니다." << endl;
     glfwTerminate();
     return -1;
   }
 
-  /* Make the window's context current */
-  glfwMakeContextCurrent(window);
-
   std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
   //std::cout << "GLSL version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
   std::cout << "Vendor: " << glGetString(GL_VENDOR) << std::endl;
   std::cout << "Renderer: " << glGetString(GL_RENDERER) << std::endl;
 
-  glfwSetKeyCallback(window, onKeyInput);
-  glfwSetFramebufferSizeCallback(window, onResize);
-  onResize(window, 640, 480);
   glfwSwapInterval(1);
 
-  char buf[128];
-  auto torus = PrepareTorus();
-
-  int sweepZ = 18;
-  int sweepY = 36;
   /* Loop until the user closes the window */
   int count = 0;
-  while (!glfwWindowShouldClose(window))
+  while (!win.shouldClose())
   {
-    /* Render here */
+    char buf[128];
     sprintf_s(buf, sizeof(buf), "Draw count: %d", ++count);
     cout << buf << endl;
-    onDraw();
-    drawTorus(torus, sweepZ, sweepY);
-    //drawRadiation();
-    //drawSphere();
+
+    /* Render here */
+    drawBackground();
+    win.drawTorus();
 
     /* Swap front and back buffers */
-    glfwSwapBuffers(window);
+    glfwSwapBuffers(win.window);
 
     /* Poll for and process events */
     glfwWaitEvents();
-  }
-
-  glfwTerminate();
-  return 0;
-}
-
-int main_(void)
-{
-  glfwInit();
-  GLFWwindow* window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
-  glfwMakeContextCurrent(window);
-  while (!glfwWindowShouldClose(window))
-  {
-    float ratio;
-    int width, height;
-    glfwGetFramebufferSize(window, &width, &height);
-    ratio = width / (float)height;
-    glViewport(0, 0, width, height);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(-ratio, ratio, -1.f, 1.f, 1.f, -1.f);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glRotatef((float)glfwGetTime() * 50.f, 0.f, 0.f, 1.f);
-    glBegin(GL_TRIANGLES);
-    glColor3f(1.f, 0.f, 0.f);
-    glVertex3f(-0.6f, -0.4f, 0.f);
-    glColor3f(0.f, 1.f, 0.f);
-    glVertex3f(0.6f, -0.4f, 0.f);
-    glColor3f(0.f, 0.f, 1.f);
-    glVertex3f(0.f, 0.6f, 0.f);
-    glEnd();
-    glfwSwapBuffers(window);
-    glfwPollEvents();
   }
 
   glfwTerminate();

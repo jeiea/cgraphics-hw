@@ -108,8 +108,8 @@ public:
 
 protected:
   static torus torus;
-  int sweepZ = 18;
-  int sweepY = 36;
+  int sweepZ = torus[0].size() - 1;
+  int sweepY = torus.size() - 1;
 };
 
 void HW2Window::onResize(int width, int height) {
@@ -130,22 +130,23 @@ void HW2Window::onResize(int width, int height) {
 
 void HW2Window::onKeyInput(int key, int action)
 {
-  if (action != GLFW_RELEASE) return;
+  if (action == GLFW_RELEASE) return;
 
   switch (key) {
   case GLFW_KEY_A:
-    sweepY = min(36, sweepY + 1);
+    sweepY = min(torus.size(), sweepY + 1);
     break;
   case GLFW_KEY_S:
-    sweepY = max(0, sweepY - 1);
+    sweepY = max(1, sweepY - 1);
     break;
   case GLFW_KEY_J:
-    sweepZ = min(18, sweepZ + 1);
+    sweepZ = min(-static_cast<int>(torus[0].size()), sweepZ + 1);
     break;
   case GLFW_KEY_K:
-    sweepZ = max(0, sweepZ - 1);
+    sweepZ = max(-static_cast<int>(torus[0].size()), sweepZ - 1);
     break;
   }
+  cout << "X: " << sweepZ << ", Y: " << sweepY << endl;
 }
 
 torus PrepareTorus() {
@@ -154,14 +155,11 @@ torus PrepareTorus() {
 
   auto rotSmall = rotate2x2(2 * PI / angleZ);
   vector<matrix<float>> sRing;
-  sRing.emplace_back(matrix<float>{ {0}, { 1 }});
+  sRing.emplace_back(matrix<float>{ { 1 }, { 0 } });
   cout << fixed;
-  for (int i = 1; i < angleZ; i++) {
+  for (int i = 1; i <= angleZ; i++) {
     sRing.emplace_back(rotSmall * *sRing.rbegin());
   }
-  //for (auto& v : sRing)
-  //  cout << '[' << v[0][0] << ", " << v[1][0] << ']' << endl;
-  //cin.get();
   transform(sRing.begin(), sRing.end(), sRing.begin(), [=](matrix<float>& mat) {
     return matrix<float> { {mat[0][0] + 2.f}, { mat[1][0] + 2.f }, { 0 }};
   });
@@ -169,7 +167,7 @@ torus PrepareTorus() {
   torus bRing;
   bRing.push_back(sRing);
   auto rotBig = rotateY(2 * PI / angleY);
-  for (int i = 1; i < angleY; i++) {
+  for (int i = 1; i <= angleY; i++) {
     auto beg = bRing.rbegin()->begin();
     auto end = bRing.rbegin()->end();
     vector<matrix<float>>&& next{};
@@ -184,41 +182,96 @@ torus PrepareTorus() {
 
 torus HW2Window::torus = PrepareTorus();
 
-void HW2Window::drawTorus() {
-  int maxY = min(torus.size() - 1, sweepY);
-  int maxZ = min(torus[0].size() - 1, sweepZ);
+template <typename PIt>
+void drawTorusInner(PIt by, int sy, PIt bz, int sz) {
   auto glVertexMat = [](matrix<float>& v) {
     glVertex3f(v[0][0], v[1][0], v[2][0]);
   };
 
   glColor3f(0, 0, 1);
-  for (int i = 0; i < maxY; i++) {
+  for (PIt y = by + 1, ey = by + sy; i != ey; i++) {
     glBegin(GL_QUAD_STRIP);
-    auto& l = torus[i];
-    auto& r = torus[i + 1];
-    for (int j = 0; j < maxZ; j++) {
+    auto& l = *(y - 1);
+    auto& r = *y;
+    for (auto z = 0; z < sz; z++) {
+      glVertexMat(l[z]);
+      glVertexMat(r[z]);
+    }
+    glEnd();
+  }
+
+  // draw wireframe
+  glColor3f(0, 0, 0);
+  glTranslatef(0.0000001, 0.0000001, 0.0000001);
+  if (sweepY <= 1 || sweepZ <= 1) return;
+
+
+  for (PIt y = by, ey = by + sy; y != ey; y++) {
+    glBegin(GL_LINE_STRIP);
+    for (PIt z = 0; z < sz; z++)
+      glVertexMat(y[z]);
+    glEnd();
+  }
+
+  for (It z = bz; i < sweepZ; i++) {
+    glBegin(GL_LINE_STRIP);
+    for (int j = 0; j < sweepY; j++)
+      glVertexMat(torus[j][i]);
+    glEnd();
+  }
+}
+
+template <typename T, typename U>
+void drawT(T (torus::*by)(), T (torus::*ey)()) {
+  auto glVertexMat = [](matrix<float>& v) {
+    glVertex3f(v[0][0], v[1][0], v[2][0]);
+  };
+
+  glColor3f(0, 0, 1);
+  for (auto y = torus.*by() + 1; i != torus.*ey(); y++) {
+    y[0][0][0];
+  }
+}
+
+void HW2Window::drawTorus() {
+  int dy = sweepY > 0 ? 1 : -1;
+  int dz = sweepZ > 0 ? 1 : -1;
+  int ay = abs(sweepY);
+  int az = abs(sweepZ);
+  auto glVertexMat = [](matrix<float>& v) {
+    glVertex3f(v[0][0], v[1][0], v[2][0]);
+  };
+
+  glColor3f(0, 0, 1);
+  for (int i = 1; i < ay; i++) {
+    glBegin(GL_QUAD_STRIP);
+    auto& l = torus[i - 1];
+    auto& r = torus[i];
+    for (int j = 0; j < az; j += dz) {
       glVertexMat(l[j]);
       glVertexMat(r[j]);
     }
     glEnd();
   }
 
+  // draw wireframe
   glColor3f(0, 0, 0);
-  glBegin(GL_LINE_STRIP);
-  for (int i = 0; i < maxY; i++) {
-    for (int j = 0; j < maxZ; j++) {
-      glVertexMat(torus[i + 0][j + 0]);
-      glVertexMat(torus[i + 1][j + 0]);
-      glVertexMat(torus[i + 1][j + 1]);
-      glVertexMat(torus[i + 0][j + 1]);
-      glVertexMat(torus[i + 0][j + 0]);
-    }
+  glTranslatef(0.0000001, 0.0000001, 0.0000001);
+  if (sweepY <= 1 || sweepZ <= 1) return;
+
+  for (int i = 0; i < sweepY; i++) {
+    glBegin(GL_LINE_STRIP);
+    for (int j = 0; j < sweepZ; j++)
+      glVertexMat(torus[i][j]);
+    glEnd();
   }
 
-  if (sweepY >= maxY) {
-
+  for (int i = 0; i < sweepZ; i++) {
+    glBegin(GL_LINE_STRIP);
+    for (int j = 0; j < sweepY; j++)
+      glVertexMat(torus[j][i]);
+    glEnd();
   }
-  glEnd();
 }
 
 void drawAxes() {
@@ -264,7 +317,6 @@ int main() {
   }
 
   std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
-  //std::cout << "GLSL version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
   std::cout << "Vendor: " << glGetString(GL_VENDOR) << std::endl;
   std::cout << "Renderer: " << glGetString(GL_RENDERER) << std::endl;
 

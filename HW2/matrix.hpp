@@ -206,9 +206,13 @@ public:
   // cross product for vector
   template <typename T>
   friend matrix<T> operator %(const matrix<T>& a, const matrix<T>& b);
-  // constant multiplication
+  // Constant multiplication, division
   template <typename T, typename K>
   friend matrix<T> operator *(const K& coef, const matrix<T>& mat);
+  template <typename T, typename K>
+  friend matrix<T> operator *(const matrix<T>& mat, const K& coef);
+  template <typename K>
+  matrix<T> operator /(const K& divisor) const;
 
   // Unary minus operator.
   matrix<T> operator -() const;
@@ -724,6 +728,11 @@ matrix<T> cross_product(const matrix<T>& a, const matrix<T>& b) {
   return { {e1, e2, e3} };
 }
 
+template <typename T>
+matrix<T> operator %(const matrix<T>& a, const matrix<T>& b) {
+  return cross_product(a, b);
+}
+
 template <typename T, typename K>
 matrix<T> operator *(const K& coef, const matrix<T>& mat) {
   matrix<T> result;
@@ -735,6 +744,24 @@ matrix<T> operator *(const K& coef, const matrix<T>& mat) {
     [&](const T& e) { return coef * e; });
 
   return result;
+}
+
+template <typename T, typename K>
+matrix<T> operator *(const matrix<T>& mat, const K& coef) {
+  return coef * mat;
+}
+
+template <typename T>
+template <typename K>
+matrix<T> matrix<T>::operator /(const K& divisor) const {
+  matrix<T> div;
+  div.reserve(rowN, colN);
+  auto beg = elements.begin();
+  auto end = elements.end();
+  auto ins = back_inserter(div.elements);
+  auto dvd = [&](const T& a) { return a / divisor; };
+  transform(beg, end, ins, dvd);
+  return div;
 }
 
 template <typename T>

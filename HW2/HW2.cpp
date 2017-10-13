@@ -161,9 +161,6 @@ tuple<vertices, vertices, vertices, grid<bool>> PrepareTorus() {
     normals.emplace_back(normal);
     tfros.emplace_back(tfro);
   }
-  centers.push_back(centers[0]);
-  normals.push_back(normals[0]);
-  tfros.push_back(tfros[0]);
 
   return make_tuple(bRing, centers, normals, tfros);
 }
@@ -251,12 +248,16 @@ void HW2Window::drawTorus() {
     glBegin(GL_QUAD_STRIP);
     auto& l = torus[dy < 0 ? torus.size() - i : i - 1];
     auto& r = torus[dy < 0 ? torus.size() - 1 - i : i];
-    for (int j = 0; j <= az; j++) {
-      int rj = dz < 0 ? static_cast<int>(torus[0].size()) - 1 - j : j;
-      //tfros
-      glColor3f(0, 0, 1);
+    auto& tfro = tfros[dy < 0 ? tfros.size() - i : i - 1];
+    for (int j = 0; j < az; j++) {
+      bool isInside = tfro[dz < 0 ? static_cast<int>(tfro.size() - 1) - j : j];
+      if (isInside) glColor3f(1, 0, 0);
+      else glColor3f(0, 0, 1);
+      int rj = dz < 0 ? static_cast<int>(torus[0].size() - 2) - j : j;
       glVertexMat(l[rj]);
       glVertexMat(r[rj]);
+      glVertexMat(l[rj + 1]);
+      glVertexMat(r[rj + 1]);
     }
     glEnd();
   }

@@ -212,20 +212,16 @@ void HW2Window::onKeyInput(int key, int action)
 
   switch (key) {
   case GLFW_KEY_A:
-    sweepY = -2 < sweepY && sweepY < 2 ? 2 :
-      min(+static_cast<int>(torus.size()), sweepY + 1);
+    sweepY = min(+static_cast<int>(torus.size() - 1), sweepY + 1);
     break;
   case GLFW_KEY_S:
-    sweepY = -2 < sweepY && sweepY < 2 ? -2 :
-      max(-static_cast<int>(torus.size()), sweepY - 1);
+    sweepY = max(-static_cast<int>(torus.size() - 1), sweepY - 1);
     break;
   case GLFW_KEY_J:
-    sweepZ = -2 < sweepZ && sweepZ < 2 ? +2 :
-      min(+static_cast<int>(torus[0].size()), sweepZ + 1);
+    sweepZ = min(+static_cast<int>(torus[0].size() - 1), sweepZ + 1);
     break;
   case GLFW_KEY_K:
-    sweepZ = -2 < sweepZ && sweepZ < 2 ? -2 :
-      max(-static_cast<int>(torus[0].size()), sweepZ - 1);
+    sweepZ = max(-static_cast<int>(torus[0].size() - 1), sweepZ - 1);
     break;
   }
   cout << "X: " << sweepZ << ", Y: " << sweepY << endl;
@@ -239,7 +235,7 @@ grid<bool> HW2Window::tfros;
 void HW2Window::drawTorus() {
   int ay = abs(sweepY);
   int az = abs(sweepZ);
-  if (ay <= 1 || az <= 1) return;
+  if (ay == 0 || az == 0) return;
   int dy = sweepY >= 0 ? 1 : -1;
   int dz = sweepZ >= 0 ? 1 : -1;
 
@@ -251,11 +247,11 @@ void HW2Window::drawTorus() {
     glVertex3f(v[0][0], v[1][0], v[2][0]);
   };
 
-  for (int i = 1; i < ay; i++) {
+  for (int i = 1; i <= ay; i++) {
     glBegin(GL_QUAD_STRIP);
     auto& l = torus[dy < 0 ? torus.size() - i : i - 1];
     auto& r = torus[dy < 0 ? torus.size() - 1 - i : i];
-    for (int j = 0; j < az; j++) {
+    for (int j = 0; j <= az; j++) {
       int rj = dz < 0 ? static_cast<int>(torus[0].size()) - 1 - j : j;
       //tfros
       glColor3f(0, 0, 1);
@@ -269,18 +265,18 @@ void HW2Window::drawTorus() {
   glColor3f(0, 0, 0);
   glTranslatef(0.001f, 0.001f, 0.001f);
 
-  for (int i = 0; i < ay; i++) {
+  for (int i = 0; i <= ay; i++) {
     glBegin(GL_LINE_STRIP);
-    for (int j = 0; j < az; j++)
+    for (int j = 0; j <= az; j++)
       glVertexMat(torus
         [dy < 0 ? torus.size() - 1 - i : i]
     [dz < 0 ? torus[0].size() - 1 - j : j]);
     glEnd();
   }
 
-  for (int i = 0; i < az; i++) {
+  for (int i = 0; i <= az; i++) {
     glBegin(GL_LINE_STRIP);
-    for (int j = 0; j < ay; j++)
+    for (int j = 0; j <= ay; j++)
       glVertexMat(torus
         [dy < 0 ? torus.size() - 1 - j : j]
     [dz < 0 ? torus[0].size() - 1 - i : i]);

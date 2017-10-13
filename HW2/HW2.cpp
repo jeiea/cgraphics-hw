@@ -94,13 +94,14 @@ GLWindow::GLWindow(const char* title, int width, int height) {
   takeContext();
 }
 
-using vertices = vector<vector<matrix<float>>>;
+template <typename T>
+using grid = vector<vector<T>>;
+using vertices = grid<matrix<float>>;
 
-tuple<vertices, vertices, vertices> PrepareTorus() {
+tuple<vertices, vertices, vertices, grid<bool>> PrepareTorus() {
   const int angleZ = 18;
   const int angleY = 36;
 
-  // Make initial small ring
   vector<matrix<float>> sRing;
   {
     sRing.reserve(angleZ);
@@ -112,55 +113,68 @@ tuple<vertices, vertices, vertices> PrepareTorus() {
     auto e = sRing.end();
     auto toRightUp = [=](matrix<float>& mat) {
       return matrix<float> {
-        {mat[0][0] + 2.f},
+        { mat[0][0] + 2.f },
         { mat[1][0] + 2.f },
         { 0 }
       }; };
     transform(b, e, b, toRightUp);
   }
 
-  auto toEye = matrix<float>{ { 1, 1, 1 } };
-
-  vertices bRing, centers, normals;
-  vector<vector<bool>> tfros;
-
-  bRing.push_back(sRing);
-  auto rotBig = rotateY(2 * PI / angleY);
-  auto rotater = [=](matrix<float>& o) { return rotBig * o; };
-  for (int i = 1; i <= angleY; i++) {
-    auto& last = *bRing.rbegin();
-    auto beg = last.begin();
-    auto end = last.end();
-    vector<matrix<float>>&& next{}, center{}, normal{};
-    transform(beg, end, back_inserter(next), rotater);
-    for (int j = 1; j < next.size(); j++) {
-      center.emplace_back((last[j - 1] + last[j] + next[j - 1] + next[j]) / 4);
-      auto v1 = last[j - 1] - last[j];
-      auto v2 = next[j] - last[j];
-      auto cross = cross_product(v1, v2);
-      float len = sqrt(
-        cross[0][0] * cross[0][0] +
-        cross[0][1] * cross[0][1] +
-        cross[0][2] * cross[0][2]);
-      normal.emplace_back(*center.rbegin() + cross.transpose() / len);
+  vertices bRing;
+  {
+    bRing.reserve(angleY);
+    bRing.push_back(sRing);
+    auto rotBig = rotateY(2 * PI / angleY);
+    auto rotater = [=](matrix<float>& o) { return rotBig * o; };
+    for (int i = 1; i <= angleY; i++) {
+      auto& last = *bRing.rbegin();
+      auto beg = last.begin();
+      auto end = last.end();
+      vector<matrix<float>>&& next{};
+      transform(beg, end, back_inserter(next), rotater);
+      bRing.emplace_back(next);
     }
-    bRing.emplace_back(next);
+  }
+
+  vertices centers, normals;
+  vector<vector<bool>> tfros;
+  auto toEye = matrix<float>{ { 1, 1, 1 } };
+  for (auto l = bRing.begin(), r = l + 1; r != bRing.end(); l++, r++) {
+    vector<matrix<float>>&& center{}, normal{};
+    vector<bool>&& tfro{};
+    auto lb = l->begin(), lt = lb + 1;
+    auto rb = r->begin(), rt = rb + 1;
+    while (lt != l->end()) {
+      center.emplace_back((*lb + *lt + *rb + *rt) / 4);
+
+      auto v1 = *lt - *lb;
+      auto v2 = *rb - *lb;
+      auto cross = cross_product(v1, v2).transpose();
+      normal.emplace_back(*center.rbegin() + cross);
+
+      float dot = (toEye * cross)[0][0];
+      tfro.push_back(dot >= 0);
+
+      lb++; lt++; rb++; rt++;
+    }
     centers.emplace_back(center);
     normals.emplace_back(normal);
+    tfros.emplace_back(tfro);
   }
-  centers.push_back(centers[1]);
-  normals.push_back(normals[1]);
+  centers.push_back(centers[0]);
+  normals.push_back(normals[0]);
+  tfros.push_back(tfros[0]);
 
-  return make_tuple(bRing, centers, normals);
+  return make_tuple(bRing, centers, normals, tfros);
 }
 
 class HW2Window : public GLWindow {
 public:
   HW2Window() : GLWindow("HW2 - Drawing Torus", 640, 480) {
     onResize(640, 480);
-    tie(torus, centers, normals) = PrepareTorus();
-    sweepZ = torus[0].size() - 1;
-    sweepY = torus.size() - 1;
+    tie(torus, centers, normals, tfros) = PrepareTorus();
+    sweepZ = static_cast<int>(torus[0].size()) - 1;
+    sweepY = static_cast<int>(torus.size()) - 1;
   }
 
   virtual void onResize(int width, int height);
@@ -171,6 +185,7 @@ protected:
   static vertices torus;
   static vertices centers;
   static vertices normals;
+  static grid<bool> tfros;
   int sweepZ;
   int sweepY;
 };
@@ -219,6 +234,7 @@ void HW2Window::onKeyInput(int key, int action)
 vertices HW2Window::torus;
 vertices HW2Window::centers;
 vertices HW2Window::normals;
+grid<bool> HW2Window::tfros;
 
 void HW2Window::drawTorus() {
   int ay = abs(sweepY);
@@ -241,6 +257,7 @@ void HW2Window::drawTorus() {
     auto& r = torus[dy < 0 ? torus.size() - 1 - i : i];
     for (int j = 0; j < az; j++) {
       int rj = dz < 0 ? static_cast<int>(torus[0].size()) - 1 - j : j;
+      //tfros
       glColor3f(0, 0, 1);
       glVertexMat(l[rj]);
       glVertexMat(r[rj]);
@@ -286,9 +303,6 @@ void drawAxes() {
 }
 
 void drawBackground() {
-  /* Handler for window-repaint event.
-  Called back when the window first appears and
-  whenever the window needs to be re-painted. */
   glClearColor(1, 1, 1, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

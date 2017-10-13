@@ -124,7 +124,7 @@ void HW2Window::onResize(int width, int height) {
 
   // Enable perspective projection
   double distance = 10;
-  gluPerspective(45.0, aspect, 0.1, distance * 10);
+  gluPerspective(45.0, aspect, 0.1, distance * 2);
   gluLookAt(distance, distance, distance, 0, 0, 0, -1, 1, -1);
 }
 
@@ -134,13 +134,13 @@ void HW2Window::onKeyInput(int key, int action)
 
   switch (key) {
   case GLFW_KEY_A:
-    sweepY = min(torus.size(), sweepY + 1);
+    sweepY = min(+static_cast<int>(torus.size()), sweepY + 1);
     break;
   case GLFW_KEY_S:
-    sweepY = max(1, sweepY - 1);
+    sweepY = max(-static_cast<int>(torus.size()), sweepY - 1);
     break;
   case GLFW_KEY_J:
-    sweepZ = min(-static_cast<int>(torus[0].size()), sweepZ + 1);
+    sweepZ = min(+static_cast<int>(torus[0].size()), sweepZ + 1);
     break;
   case GLFW_KEY_K:
     sweepZ = max(-static_cast<int>(torus[0].size()), sweepZ - 1);
@@ -221,57 +221,52 @@ void drawTorusInner(PIt by, int sy, PIt bz, int sz) {
   }
 }
 
-template <typename T, typename U>
-void drawT(T (torus::*by)(), T (torus::*ey)()) {
-  auto glVertexMat = [](matrix<float>& v) {
-    glVertex3f(v[0][0], v[1][0], v[2][0]);
-  };
-
-  glColor3f(0, 0, 1);
-  for (auto y = torus.*by() + 1; i != torus.*ey(); y++) {
-    y[0][0][0];
-  }
-}
-
 void HW2Window::drawTorus() {
-  int dy = sweepY > 0 ? 1 : -1;
-  int dz = sweepZ > 0 ? 1 : -1;
+  int dy = sweepY >= 0 ? 1 : -1;
+  int dz = sweepZ >= 0 ? 1 : -1;
   int ay = abs(sweepY);
   int az = abs(sweepZ);
+  glEnable(GL_DEPTH_TEST);
+  glClearDepth(1);
+  glDepthFunc(GL_LESS);
+
   auto glVertexMat = [](matrix<float>& v) {
     glVertex3f(v[0][0], v[1][0], v[2][0]);
   };
-
   glColor3f(0, 0, 1);
   for (int i = 1; i < ay; i++) {
     glBegin(GL_QUAD_STRIP);
-    auto& l = torus[i - 1];
-    auto& r = torus[i];
-    for (int j = 0; j < az; j += dz) {
-      glVertexMat(l[j]);
-      glVertexMat(r[j]);
+    auto& l = torus[dy < 0 ? torus.size() - i : i - 1];
+    auto& r = torus[dy < 0 ? torus.size() - 1 - i : i];
+    for (int j = 0; j < az; j++) {
+      int rj = dz < 0 ? torus[0].size() - 1 - j : j;
+      glVertexMat(l[rj]);
+      glVertexMat(r[rj]);
     }
     glEnd();
   }
 
   // draw wireframe
   glColor3f(0, 0, 0);
-  glTranslatef(0.0000001, 0.0000001, 0.0000001);
-  if (sweepY <= 1 || sweepZ <= 1) return;
+  glTranslatef(0.001, 0.001, 0.001);
+  if (ay <= 1 || az <= 1) return;
 
-  for (int i = 0; i < sweepY; i++) {
+  for (int i = 0; i < ay; i++) {
     glBegin(GL_LINE_STRIP);
-    for (int j = 0; j < sweepZ; j++)
-      glVertexMat(torus[i][j]);
+    for (int j = 0; j < az; j++)
+      glVertexMat(torus
+        [dy < 0 ? torus.size() - 1 - i : i]
+        [dz < 0 ? torus[0].size() - 1 - j : j]);
     glEnd();
   }
 
-  for (int i = 0; i < sweepZ; i++) {
+  for (int i = 0; i < az; i++) {
     glBegin(GL_LINE_STRIP);
-    for (int j = 0; j < sweepY; j++)
-      glVertexMat(torus[j][i]);
+    for (int j = 0; j < ay; j++)
+      glVertexMat(torus[dy < 0 ? torus.size() - 1 - j : j][dz < 0 ? torus[0].size() - 1 - i : i]);
     glEnd();
   }
+
 }
 
 void drawAxes() {

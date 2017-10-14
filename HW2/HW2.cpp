@@ -138,7 +138,7 @@ tuple<vertices, vertices, vertices, grid<bool>> PrepareTorus() {
 
   vertices centers, normals;
   vector<vector<bool>> tfros;
-  auto toEye = matrix<float>{ { 1, 1, 1 } };
+  auto toEye = matrix<float>{ { 1, 0.75f, 1 } };
   for (auto l = bRing.begin(), r = l + 1; r != bRing.end(); l++, r++) {
     vector<matrix<float>>&& center{}, normal{};
     vector<bool>&& tfro{};
@@ -147,8 +147,8 @@ tuple<vertices, vertices, vertices, grid<bool>> PrepareTorus() {
     while (lt != l->end()) {
       center.emplace_back((*lb + *lt + *rb + *rt) / 4);
 
-      auto v1 = *lt - *lb;
-      auto v2 = *rb - *lb;
+      auto v1 = *rb - *lb;
+      auto v2 = *lt - *lb;
       auto cross = cross_product(v1, v2).transpose();
       normal.emplace_back(*center.rbegin() + cross);
 
@@ -199,7 +199,7 @@ void HW2Window::onResize(int width, int height) {
 
   // Enable perspective projection
   double distance = 8;
-  gluPerspective(45.0, aspect, 0.1, distance * 2);
+  gluPerspective(45.0, aspect, distance, distance * 2);
   gluLookAt(distance, distance, distance, 0, 0, 0, -1, 1, -1);
 }
 
@@ -239,6 +239,7 @@ void HW2Window::drawTorus() {
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LEQUAL);
   glClearDepth(1);
+  glTranslatef(0, 0, 0);
 
   auto glVertexMat = [](matrix<float>& v) {
     glVertex3f(v[0][0], v[1][0], v[2][0]);
@@ -264,7 +265,7 @@ void HW2Window::drawTorus() {
 
   // Draw wireframe
   glColor3f(0, 0, 0);
-  glTranslatef(0.001f, 0.001f, 0.001f);
+  glTranslatef(0.01f, 0.00f, 0.01f);
 
   for (int i = 0; i <= ay; i++) {
     glBegin(GL_LINE_STRIP);
@@ -283,6 +284,18 @@ void HW2Window::drawTorus() {
     [dz < 0 ? torus[0].size() - 1 - i : i]);
     glEnd();
   }
+
+  glBegin(GL_LINES);
+  for (int i = 0; i < ay; i++)
+    for (int j = 0; j < az; j++) {
+      glVertexMat(centers
+        [dy < 0 ? centers.size() - 1 - i : i]
+      [dz < 0 ? centers[0].size() - 1 - j : j]);
+      glVertexMat(normals
+        [dy < 0 ? normals.size() - 1 - i : i]
+      [dz < 0 ? normals[0].size() - 1 - j : j]);
+    }
+  glEnd();
 }
 
 void drawAxes() {
@@ -293,7 +306,7 @@ void drawAxes() {
   glColor3f(0.0f, 1.0f, 0.0f);
   glVertex3f(0.0f, 0.0f, 0.0f);
   glVertex3f(0.0f, 100.0f, 0.0f);
-  glColor3f(0.0f, 1.0f, 1.0f);
+  glColor3f(0.0f, 0.0f, 1.0f);
   glVertex3f(0.0f, 0.0f, 0.0f);
   glVertex3f(0.0f, 0.0f, 100.0f);
   glEnd();

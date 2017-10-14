@@ -137,7 +137,7 @@ tuple<vertices, vertices, vertices, grid<bool>> PrepareTorus() {
   }
 
   vertices centers, normals;
-  vector<vector<bool>> tfros;
+  vector<vector<bool>> gridRB;
   auto eye = matrix<float>{ {8}, {8}, {8} };
   for (auto l = bRing.begin(), r = l + 1; r != bRing.end(); l++, r++) {
     vector<matrix<float>>&& center{}, normal{};
@@ -159,17 +159,17 @@ tuple<vertices, vertices, vertices, grid<bool>> PrepareTorus() {
     }
     centers.emplace_back(center);
     normals.emplace_back(normal);
-    tfros.emplace_back(tfro);
+    gridRB.emplace_back(tfro);
   }
 
-  return make_tuple(bRing, centers, normals, tfros);
+  return make_tuple(bRing, centers, normals, gridRB);
 }
 
 class HW2Window : public GLWindow {
 public:
   HW2Window() : GLWindow("HW2 - Drawing Torus", 640, 480) {
     onResize(640, 480);
-    tie(torus, centers, normals, tfros) = PrepareTorus();
+    tie(torus, centers, normals, gridRB) = PrepareTorus();
     sweepZ = static_cast<int>(torus[0].size()) - 1;
     sweepY = static_cast<int>(torus.size()) - 1;
   }
@@ -177,12 +177,13 @@ public:
   virtual void onResize(int width, int height);
   virtual void onKeyInput(int key, int action);
   void drawTorus();
+  void drawTorusFace();
 
 protected:
   static vertices torus;
   static vertices centers;
   static vertices normals;
-  static grid<bool> tfros;
+  static grid<bool> gridRB;
   int sweepZ;
   int sweepY;
 };
@@ -228,7 +229,20 @@ void HW2Window::onKeyInput(int key, int action)
 vertices HW2Window::torus;
 vertices HW2Window::centers;
 vertices HW2Window::normals;
-grid<bool> HW2Window::tfros;
+grid<bool> HW2Window::gridRB;
+
+void glVertexMat(matrix<float>& v) {
+  glVertex3f(v[0][0], v[1][0], v[2][0]);
+}
+
+void HW2Window::drawTorusFace() {
+  int ay = abs(sweepY);
+  int az = abs(sweepZ);
+  int dy = sweepY >= 0 ? 1 : -1;
+  int dz = sweepZ >= 0 ? 1 : -1;
+
+  begin(torus);
+}
 
 void HW2Window::drawTorus() {
   int ay = abs(sweepY);
@@ -240,54 +254,51 @@ void HW2Window::drawTorus() {
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LEQUAL);
   glClearDepth(1);
-  glTranslatef(0, 0, 0);
 
-  auto glVertexMat = [](matrix<float>& v) {
-    glVertex3f(v[0][0], v[1][0], v[2][0]);
-  };
-
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  glEnable(GL_POLYGON_OFFSET_FILL);
+  glPolygonOffset(1, 1);
   for (int i = 1; i <= ay; i++) {
     glBegin(GL_QUAD_STRIP);
     auto& l = torus[dy < 0 ? torus.size() - i : i - 1];
     auto& r = torus[dy < 0 ? torus.size() - 1 - i : i];
-    auto& tfro = tfros[dy < 0 ? tfros.size() - i : i - 1];
+    auto& c = gridRB[dy < 0 ? gridRB.size() - i : i - 1];
     for (int j = 0; j < az; j++) {
-      bool isInside = tfro[dz < 0 ? static_cast<int>(tfro.size() - 1) - j : j];
-      if (isInside) glColor3f(1, 0, 0);
+      int rj = dz < 0 ? static_cast<int>(torus[0].size() - 1) - j : j;
+      if (c[dz < 0 ? c.size() - j - 1 : j]) glColor3f(1, 0, 0);
       else glColor3f(0, 0, 1);
-      int rj = dz < 0 ? static_cast<int>(torus[0].size() - 2) - j : j;
       glVertexMat(l[rj]);
       glVertexMat(r[rj]);
-      glVertexMat(l[rj + 1]);
-      glVertexMat(r[rj + 1]);
+      glVertexMat(l[rj + dz]);
+      glVertexMat(r[rj + dz]);
     }
     glEnd();
   }
+  glDisable(GL_POLYGON_OFFSET_FILL);
 
   // Draw wireframe
-  glColor3f(0, 0, 0);
-  float pc = 0.04f;
-  glTranslatef(pc, pc, pc);
+  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  glEnable(GL_LINE_SMOOTH);
+  glLineWidth(0.3f);
 
-  for (int i = 0; i <= ay; i++) {
-    glBegin(GL_LINE_STRIP);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable(GL_BLEND);
+  glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+
+  glColor3f(0, 0, 0);
+  for (int i = 1; i <= ay; i++) {
+    glBegin(GL_QUAD_STRIP);
+    auto& l = torus[dy < 0 ? torus.size() - i : i - 1];
+    auto& r = torus[dy < 0 ? torus.size() - 1 - i : i];
     for (int j = 0; j <= az; j++) {
-      glVertexMat(torus
-        [dy < 0 ? torus.size() - 1 - i : i]
-    [dz < 0 ? torus[0].size() - 1 - j : j]);
+      int rj = dz < 0 ? static_cast<int>(torus[0].size() - 1) - j : j;
+      glVertexMat(l[rj]);
+      glVertexMat(r[rj]);
     }
     glEnd();
   }
 
-  for (int i = 0; i <= az; i++) {
-    glBegin(GL_LINE_STRIP);
-    for (int j = 0; j <= ay; j++)
-      glVertexMat(torus
-        [dy < 0 ? torus.size() - 1 - j : j]
-    [dz < 0 ? torus[0].size() - 1 - i : i]);
-    glEnd();
-  }
-
+  // Draw normals
   glBegin(GL_LINES);
   for (int i = 0; i < ay; i++)
     for (int j = 0; j < az; j++) {
@@ -299,6 +310,12 @@ void HW2Window::drawTorus() {
       [dz < 0 ? normals[0].size() - 1 - j : j]);
     }
   glEnd();
+
+  glDisable(GL_BLEND);
+  glDisable(GL_LINE_SMOOTH);
+  glPolygonOffset(0, 0);
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  glDisable(GL_DEPTH_TEST);
 }
 
 void drawAxes() {

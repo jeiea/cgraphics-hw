@@ -138,7 +138,7 @@ tuple<vertices, vertices, vertices, grid<bool>> PrepareTorus() {
 
   vertices centers, normals;
   vector<vector<bool>> tfros;
-  auto toEye = matrix<float>{ { 1, 0.75f, 1 } };
+  auto eye = matrix<float>{ {8}, {8}, {8} };
   for (auto l = bRing.begin(), r = l + 1; r != bRing.end(); l++, r++) {
     vector<matrix<float>>&& center{}, normal{};
     vector<bool>&& tfro{};
@@ -149,10 +149,10 @@ tuple<vertices, vertices, vertices, grid<bool>> PrepareTorus() {
 
       auto v1 = *rb - *lb;
       auto v2 = *lt - *lb;
-      auto cross = cross_product(v1, v2).transpose();
-      normal.emplace_back(*center.rbegin() + cross);
+      auto cross = cross_product(v1, v2);
+      normal.emplace_back(*center.rbegin() + cross.transpose());
 
-      float dot = (toEye * cross)[0][0];
+      float dot = (cross * (eye - *center.rbegin()))[0][0];
       tfro.push_back(dot >= 0);
 
       lb++; lt++; rb++; rt++;
@@ -199,6 +199,7 @@ void HW2Window::onResize(int width, int height) {
 
   // Enable perspective projection
   double distance = 8;
+  //double zNear = distance + 4, zFar = zNear + 8;
   gluPerspective(45.0, aspect, distance, distance * 2);
   gluLookAt(distance, distance, distance, 0, 0, 0, -1, 1, -1);
 }
@@ -265,14 +266,16 @@ void HW2Window::drawTorus() {
 
   // Draw wireframe
   glColor3f(0, 0, 0);
-  glTranslatef(0.01f, 0.00f, 0.01f);
+  float pc = 0.04f;
+  glTranslatef(pc, pc, pc);
 
   for (int i = 0; i <= ay; i++) {
     glBegin(GL_LINE_STRIP);
-    for (int j = 0; j <= az; j++)
+    for (int j = 0; j <= az; j++) {
       glVertexMat(torus
         [dy < 0 ? torus.size() - 1 - i : i]
     [dz < 0 ? torus[0].size() - 1 - j : j]);
+    }
     glEnd();
   }
 

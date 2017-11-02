@@ -26,32 +26,6 @@ matrix<float> rotateY(float radian) {
   };
 }
 
-static void resizeHandler(GLFWwindow* window, int width, int height) {
-  auto win = static_cast<GLWindow*>(glfwGetWindowUserPointer(window));
-  win->onResize(width, height);
-}
-
-static void keyHandler(GLFWwindow* window, int key, int scancode, int action, int mods) {
-  auto win = static_cast<GLWindow*>(glfwGetWindowUserPointer(window));
-  win->onKeyInput(key, action);
-}
-
-GLWindow::GLWindow(const char* title, int width, int height) {
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-
-  /* Create a windowed mode window and its OpenGL context */
-  auto caption = title ? title : "OpenGL Window";
-  window = glfwCreateWindow(640, 480, caption, nullptr, nullptr);
-  if (!window) return;
-
-  glfwSetWindowUserPointer(window, this);
-  glfwSetFramebufferSizeCallback(window, resizeHandler);
-  glfwSetKeyCallback(window, keyHandler);
-
-  glfwMakeContextCurrent(*this);
-}
-
 tuple<vertices, vertices, vertices, grid<bool>> PrepareTorus() {
   const int angleZ = 18;
   const int angleY = 36;

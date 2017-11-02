@@ -50,7 +50,7 @@ int main() {
     win.drawTorus();
 
     /* Swap front and back buffers */
-    glfwSwapBuffers(win.window);
+    glfwSwapBuffers(win);
 
     /* Poll for and process events */
     glfwWaitEvents();

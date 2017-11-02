@@ -142,12 +142,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="HW.cpp" />
     <ClCompile Include="HW2.cpp" />
     <ClCompile Include="HW3.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GLFW\glfw3.h" />
+    <ClInclude Include="HW.hpp" />
     <ClInclude Include="HW2.hpp" />
     <ClInclude Include="HW3.hpp" />
     <ClInclude Include="matrix.hpp" />

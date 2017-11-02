@@ -27,6 +27,9 @@
     <ClInclude Include="HW3.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="HW.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="HW2.cpp">
@@ -36,6 +39,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="HW3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HW.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -47,7 +47,7 @@ int main() {
 
     /* Render here */
     drawBackground();
-    win.drawTorus();
+    win.onDraw();
 
     /* Swap front and back buffers */
     glfwSwapBuffers(win);

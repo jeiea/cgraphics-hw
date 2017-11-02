@@ -13,8 +13,7 @@ public:
 
   virtual void onResize(int width, int height);
   virtual void onKeyInput(int key, int action);
-  void drawTorus();
-  void drawTorusFace();
+  virtual void onDraw();
 
 protected:
   static vertices torus;
@@ -24,5 +23,3 @@ protected:
   int sweepZ;
   int sweepY;
 };
-
-void drawBackground();

@@ -147,16 +147,7 @@ void glVertexMat(matrix<float>& v) {
   glVertex3f(v[0][0], v[1][0], v[2][0]);
 }
 
-void HW2Window::drawTorusFace() {
-  int ay = abs(sweepY);
-  int az = abs(sweepZ);
-  int dy = sweepY >= 0 ? 1 : -1;
-  int dz = sweepZ >= 0 ? 1 : -1;
-
-  begin(torus);
-}
-
-void HW2Window::drawTorus() {
+void HW2Window::onDraw() {
   int ay = abs(sweepY);
   int az = abs(sweepZ);
   if (ay == 0 || az == 0) return;
@@ -228,28 +219,4 @@ void HW2Window::drawTorus() {
   glPolygonOffset(0, 0);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   glDisable(GL_DEPTH_TEST);
-}
-
-void drawAxes() {
-  glBegin(GL_LINES);
-  glColor3f(1.0f, 0.0f, 0.0f);
-  glVertex3f(0.0f, 0.0f, 0.0f);
-  glVertex3f(100.0f, 0.0f, 0.0f);
-  glColor3f(0.0f, 1.0f, 0.0f);
-  glVertex3f(0.0f, 0.0f, 0.0f);
-  glVertex3f(0.0f, 100.0f, 0.0f);
-  glColor3f(0.0f, 0.0f, 1.0f);
-  glVertex3f(0.0f, 0.0f, 0.0f);
-  glVertex3f(0.0f, 0.0f, 100.0f);
-  glEnd();
-}
-
-void drawBackground() {
-  glClearColor(1, 1, 1, 1);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-
-  drawAxes();
 }

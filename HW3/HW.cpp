@@ -49,3 +49,27 @@ void HWWindow::onResize(int width, int height) {
   gluPerspective(45.0, aspect, distance, distance * 2);
   gluLookAt(distance, distance, distance, 0, 0, 0, -1, 1, -1);
 }
+
+void drawAxes() {
+  glBegin(GL_LINES);
+  glColor3f(1.0f, 0.0f, 0.0f);
+  glVertex3f(0.0f, 0.0f, 0.0f);
+  glVertex3f(100.0f, 0.0f, 0.0f);
+  glColor3f(0.0f, 1.0f, 0.0f);
+  glVertex3f(0.0f, 0.0f, 0.0f);
+  glVertex3f(0.0f, 100.0f, 0.0f);
+  glColor3f(0.0f, 0.0f, 1.0f);
+  glVertex3f(0.0f, 0.0f, 0.0f);
+  glVertex3f(0.0f, 0.0f, 100.0f);
+  glEnd();
+}
+
+void drawBackground() {
+  glClearColor(1, 1, 1, 1);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+
+  drawAxes();
+}

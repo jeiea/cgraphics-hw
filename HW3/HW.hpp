@@ -15,6 +15,8 @@ public:
     glViewport(0, 0, width, height);
   }
 
+  virtual void onDraw() {};
+
   operator GLFWwindow*() { return window; }
 
 protected:
@@ -34,3 +36,5 @@ public:
   // If user press function key, the number is recorded.
   int exitMessage = 0;
 };
+
+void drawBackground();

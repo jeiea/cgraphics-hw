@@ -7,7 +7,7 @@ template <typename T>
 using grid = std::vector<std::vector<T>>;
 using vertices = grid<matrix<float>>;
 
-class HW2Window : public GLWindow {
+class HW2Window : public HWWindow {
 public:
   HW2Window();
 

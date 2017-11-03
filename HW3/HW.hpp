@@ -18,6 +18,7 @@ public:
   virtual void onDraw() {};
 
   operator GLFWwindow*() { return window; }
+  virtual ~GLWindow() { glfwDestroyWindow(window); }
 
 protected:
   GLFWwindow* window;

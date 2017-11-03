@@ -6,6 +6,7 @@ public:
   HW3Window();
 
   virtual void onKeyInput(int key, int action);
+  virtual void onDraw();
 
 protected:
 };

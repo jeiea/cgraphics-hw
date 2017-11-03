@@ -93,7 +93,7 @@ tuple<vertices, vertices, vertices, grid<bool>> PrepareTorus() {
   return make_tuple(bRing, centers, normals, gridRB);
 }
 
-HW2Window::HW2Window() : GLWindow("HW2 - Drawing Torus", 640, 480) {
+HW2Window::HW2Window() : HWWindow("HW2 - Drawing Torus", 640, 480) {
   onResize(640, 480);
   tie(torus, centers, normals, gridRB) = PrepareTorus();
   sweepZ = static_cast<int>(torus[0].size()) - 1;
@@ -119,6 +119,7 @@ void HW2Window::onResize(int width, int height) {
 
 void HW2Window::onKeyInput(int key, int action)
 {
+  HWWindow::onKeyInput(key, action);
   if (action == GLFW_RELEASE) return;
 
   switch (key) {
@@ -148,6 +149,8 @@ void glVertexMat(matrix<float>& v) {
 }
 
 void HW2Window::onDraw() {
+  drawBackground();
+
   int ay = abs(sweepY);
   int az = abs(sweepZ);
   if (ay == 0 || az == 0) return;

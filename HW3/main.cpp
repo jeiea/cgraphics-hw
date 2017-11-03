@@ -13,17 +13,11 @@ int APIENTRY _tWinMain(
 #endif
 #include <iostream>
 #include "HW2.hpp"
+#include "HW3.hpp"
 
 using namespace std;
 
-int main() {
-  /* Initialize the library */
-  if (!glfwInit()) {
-    cerr << "OpenGL 초기화에 실패했습니다." << endl;
-    return -1;
-  }
-
-  HW2Window win;
+int loop(HWWindow& win) {
   if (win.bad())
   {
     cerr << "OpenGL 초기화에 실패했습니다." << endl;
@@ -46,7 +40,6 @@ int main() {
     cout << buf << endl;
 
     /* Render here */
-    drawBackground();
     win.onDraw();
 
     /* Swap front and back buffers */
@@ -54,6 +47,31 @@ int main() {
 
     /* Poll for and process events */
     glfwWaitEvents();
+  }
+
+  return win.exitMessage;
+}
+
+int main() {
+  /* Initialize the library */
+  if (!glfwInit()) {
+    cerr << "OpenGL 초기화에 실패했습니다." << endl;
+    return -1;
+  }
+
+  for (int kind = 2; kind > 0;) {
+    switch (kind) {
+    case 2:
+      kind = loop(HW2Window());
+      break;
+    case 3:
+      kind = loop(HW3Window());
+      break;
+    default:
+      kind = 0;
+      break;
+    }
+
   }
 
   glfwTerminate();

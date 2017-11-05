@@ -59,7 +59,7 @@ int main() {
     return -1;
   }
 
-  for (int kind = 2; kind > 0;) {
+  for (int kind = 3; kind > 0;) {
     switch (kind) {
     case 2:
       kind = loop(HW2Window());
@@ -71,7 +71,6 @@ int main() {
       kind = 0;
       break;
     }
-
   }
 
   glfwTerminate();

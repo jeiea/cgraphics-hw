@@ -1,5 +1,6 @@
 #include <fstream>
 #include <vector>
+#include <valarray>
 #include "HW3.hpp"
 
 using namespace std;
@@ -7,10 +8,29 @@ using namespace std;
 HW3Window::HW3Window() : HWWindow("HW3 - Lighting with bunny", 640, 480) {
   onResize(640, 480);
 
-  LoadModel("bunny.txt");
+  loadModel("bunny.txt");
 }
 
-void HW3Window::LoadModel(const char* path) {
+point3 get_cross(const point3& p1, const point3& p2) {
+  return {
+    p1[1] * p2[2] - p1[2] * p2[1],
+    p1[2] * p2[0] - p1[0] * p2[2],
+    p1[0] * p2[1] - p1[1] * p2[0],
+  };
+}
+
+point3 get_face_normal(const vector<point3>& vertices, const trian& tri) {
+  auto& v0 = vertices[tri[0]];
+  auto& v1 = vertices[tri[1]];
+  auto& v2 = vertices[tri[2]];
+
+  auto l = v1 - v0;
+  auto r = v2 - v0;
+
+  return l * r;
+}
+
+void HW3Window::loadModel(const char* path) {
   auto f = ifstream(path);
   if (!f) return;
 
@@ -21,14 +41,17 @@ void HW3Window::LoadModel(const char* path) {
   for (int i = 0; i < ver_count; i++) {
     float x, y, z;
     if (!(f >> x >> y >> z)) break;
-    vertices.emplace_back(forward_as_tuple(x, y, z));
+    vertices.emplace_back(x, y, z);
   }
 
   triangles.reserve(tri_count);
   for (int i = 0; i < tri_count; i++) {
     int a, b, c;
     if (!(f >> a >> b >> c)) break;
-    triangles.emplace_back(forward_as_tuple(a, b, c));
+
+    trian triangle{ a, b, c };
+    triangles.push_back(triangle);
+    //normals.push_back(get_face_normal(vertices, triangle));
   }
 }
 
@@ -48,4 +71,6 @@ void HW3Window::onKeyInput(int key, int action) {
 void HW3Window::onDraw() {
   drawBackground();
 
+  for (auto& tri : triangles) {
+  }
 }

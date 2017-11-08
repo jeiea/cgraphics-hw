@@ -630,9 +630,8 @@ matrix<T> operator +(const matrix<T>& a, const matrix<T>& b)
   matrix<T> result;
   result.reserve(a.rowN, a.colN);
 
-  transform(a.elements.begin(), a.elements.end(),
-    b.elements.begin(), back_inserter(result.elements),
-    plus<T>());
+  transform(begin(a.elements), end(a.elements), begin(b.elements),
+    back_inserter(result.elements), plus<T>());
 
   return result;
 }
@@ -769,7 +768,7 @@ matrix<T> matrix<T>::operator -() const
 {
   matrix<T> result(*this);
   vector<T>& elems = result.elements;
-  transform(elems.begin(), elems.end(), elems.begin(), negate<T>());
+  transform(begin(elems), end(elems), begin(elems), negate<T>());
   return result;
 }
 
@@ -848,7 +847,7 @@ template <typename T>
 T operator ==(const matrix<T>& a, const matrix<T>& b)
 {
   return a.size() == b.size() &&
-    equal(a.elements.begin(), a.elements.end(), b.elements.begin());
+    equal(begin(a.elements), end(a.elements), begin(b.elements));
 }
 
 template <typename T>
@@ -866,8 +865,8 @@ T operator < (const matrix<T>& a, const matrix<T>& b)
   return a.area() < b.area() ||
     a.area() == b.area() && a.rowN < b.rowN ||
     lexicographical_compare(
-      a.elements.begin(), a.elements.end(),
-      b.elements.begin(), b.elements.end());
+      begin(a.elements), end(a.elements),
+      begin(b.elements), end(b.elements));
 }
 
 template <typename T>

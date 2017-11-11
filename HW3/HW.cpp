@@ -49,7 +49,7 @@ void HWWindow::onResize(int width, int height) {
   gluLookAt(distance, distance, distance, 0, 0, 0, -1, 1, -1);
 }
 
-void draw_axes() {
+void drawAxes() {
   glBegin(GL_LINES);
   glColor3f(1.0f, 0.0f, 0.0f);
   glVertex3f(0.0f, 0.0f, 0.0f);
@@ -63,30 +63,12 @@ void draw_axes() {
   glEnd();
 }
 
-void draw_background() {
+void drawBackground() {
   glClearColor(1, 1, 1, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
-  draw_axes();
-}
-
-void draw_guide(float x, float y, float z) {
-  glBegin(GL_LINES);
-  glVertex3f(x, y, z);
-  glVertex3f(0, y, z);
-  //glVertex3f(x, y, z);
-  //glVertex3f(x, 0, z);
-  //glVertex3f(x, y, z);
-  //glVertex3f(x, y, 0);
-
-  //glVertex3f(x, y, z);
-  //glVertex3f(x, 0, 0);
-  //glVertex3f(x, y, z);
-  //glVertex3f(0, y, 0);
-  //glVertex3f(x, y, z);
-  //glVertex3f(0, 0, z);
-  glEnd();
+  drawAxes();
 }

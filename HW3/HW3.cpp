@@ -95,7 +95,7 @@ void HW3Window::onKeyInput(int key, int action) {
   }
 }
 
-void draw_model(
+void drawModel(
   const vector<vec3f>& vertices,
   const vector<vec3f>& normals,
   const vector<vec3i>& triangles)
@@ -125,7 +125,7 @@ void draw_model(
   glDrawElements(GL_TRIANGLES, total_vx, GL_UNSIGNED_INT, triangles.data());
 }
 
-void draw_vertex_normals(
+void drawVertexNormals(
   const vector<vec3f>& vertices,
   const vector<vec3f>& normals)
 {
@@ -154,12 +154,11 @@ matrix<float> axis_rotate(vec3f axis, float rad) {
 }
 
 void HW3Window::onDraw() {
-  draw_background();
+  drawBackground();
 
   glPointSize(10.f);
   glBegin(GL_POINTS);
   matrix<float> init{ { 0 },{ 8 },{ 0 } };
-  init *= 0.3f;
   vec3f axis{ { 1, 1, 1 } };
   double off_dir = secDir < 0 ? -secDir : glfwGetTime() - secDir;
   auto pos_dir = axis_rotate(axis, off_dir * 0.5f * PI) * init;
@@ -171,30 +170,31 @@ void HW3Window::onDraw() {
   glEnable(GL_COLOR_MATERIAL);
   glEnable(GL_NORMALIZE);
 
-  GLfloat ambient[4] = { 0.1f, 0.1f, 0.1f, 1.f };
-  GLfloat diffuse[4] = { 1, 1, 1, 1 };
+  GLfloat ambient[4] = { 0.1f, 0.1f, 0.1f, 1 };
+  GLfloat diffuse[4] = { 0.5f, 0.5f, 0.5f, 1 };
   GLfloat null[4] = { 0, 0, 0, 0 };
-  GLfloat lightPos[4] = { pos_dir[0][0], pos_dir[1][0], pos_dir[2][0], 0 };
+  GLfloat lit_pos[4] = { pos_dir[0][0], pos_dir[1][0], pos_dir[2][0], 0 };
+
+  //glEnable(GL_LIGHT0);
+  //glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
+  //glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
+  //glLightfv(GL_LIGHT0, GL_SPECULAR, null);
+  //glLightfv(GL_LIGHT0, GL_POSITION, lit_pos);
+
+  GLfloat specular[4] = { 1, 1, 1, 1 };
   GLfloat direction[4] = { -1,-1,-1,0 };
 
-  glEnable(GL_LIGHT0);
-  glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
-  glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
-  glLightfv(GL_LIGHT0, GL_SPECULAR, null);
-  glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
-
-  GLfloat specular[4] = { 1,1,1,1 };
-
-  //glEnable(GL_LIGHT1);
-  //glLightfv(GL_LIGHT1, GL_SPECULAR, specular);
-  //glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, direction);
+  glEnable(GL_LIGHT1);
+  glLightfv(GL_LIGHT1, GL_SPECULAR, specular);
+  glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, direction);
+  glLightfv(GL_LIGHT1, GL_POSITION, lit_pos);
 
   GLfloat mat_ambient[4] = { 0.3,0.3,1,1 };
   GLfloat mat_diffuse[4] = { 0.6,0.6,0.6,1 };
 
   glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
-  //glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+  glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
 
-  draw_model(vertices, normals, triangles);
-  draw_vertex_normals(vertices, normals);
+  drawModel(vertices, normals, triangles);
+  drawVertexNormals(vertices, normals);
 }

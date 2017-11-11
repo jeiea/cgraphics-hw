@@ -26,7 +26,7 @@ matrix<float> rotateY(float radian) {
   };
 }
 
-tuple<vertices, vertices, vertices, grid<bool>> PrepareTorus() {
+tuple<vertices, vertices, vertices, grid<bool>> prepare_torus() {
   const int angleZ = 18;
   const int angleY = 36;
 
@@ -94,27 +94,10 @@ tuple<vertices, vertices, vertices, grid<bool>> PrepareTorus() {
 }
 
 HW2Window::HW2Window() : HWWindow("HW2 - Drawing Torus", 640, 480) {
-  onResize(640, 480);
-  tie(torus, centers, normals, gridRB) = PrepareTorus();
+  HWWindow::onResize(640, 480);
+  tie(torus, centers, normals, gridRB) = prepare_torus();
   sweepZ = static_cast<int>(torus[0].size()) - 1;
   sweepY = static_cast<int>(torus.size()) - 1;
-}
-
-void HW2Window::onResize(int width, int height) {
-  GLWindow::onResize(width, height);
-
-  if (height == 0) height = 1;   // To prevent divide by 0
-  GLfloat aspect = (GLfloat)width / (GLfloat)height;
-
-  // Set the aspect ratio of the clipping volume to match the viewport
-  glMatrixMode(GL_PROJECTION);  // To operate on the Projection matrix
-  glLoadIdentity();             // Reset
-
-  // Enable perspective projection
-  double distance = 8;
-  //double zNear = distance + 4, zFar = zNear + 8;
-  gluPerspective(45.0, aspect, distance, distance * 2);
-  gluLookAt(distance, distance, distance, 0, 0, 0, -1, 1, -1);
 }
 
 void HW2Window::onKeyInput(int key, int action)

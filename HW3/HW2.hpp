@@ -11,7 +11,6 @@ class HW2Window : public HWWindow {
 public:
   HW2Window();
 
-  virtual void onResize(int width, int height);
   virtual void onKeyInput(int key, int action);
   virtual void onDraw();
 

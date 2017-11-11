@@ -132,7 +132,7 @@ void glVertexMat(matrix<float>& v) {
 }
 
 void HW2Window::onDraw() {
-  drawBackground();
+  draw_background();
 
   int ay = abs(sweepY);
   int az = abs(sweepZ);

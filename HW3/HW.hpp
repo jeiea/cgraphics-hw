@@ -38,4 +38,5 @@ public:
   int exitMessage = 0;
 };
 
-void drawBackground();
+void draw_background();
+void draw_guide(float x, float y, float z);

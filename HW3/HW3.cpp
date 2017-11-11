@@ -1,9 +1,12 @@
 #include <cmath>
 #include <fstream>
 #include <vector>
+#include "matrix.hpp"
 #include "HW3.hpp"
 
 using namespace std;
+
+const float PI = 3.141592653589793238462643383279502884f;
 
 HW3Window::HW3Window() : HWWindow("HW3 - Lighting with bunny", 640, 480) {
   onResize(640, 480);
@@ -92,29 +95,40 @@ void HW3Window::onKeyInput(int key, int action) {
   }
 }
 
-void HW3Window::onDraw() {
-  drawBackground();
+void draw_model(
+  const vector<vec3f>& vertices,
+  const vector<vec3f>& normals,
+  const vector<vec3i>& triangles)
+{
+  const auto total_vx = static_cast<GLsizei>(triangles.size() * 3);
 
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LEQUAL);
   glClearDepth(1);
 
   glEnableClientState(GL_VERTEX_ARRAY);
+  glEnableClientState(GL_NORMAL_ARRAY);
   glVertexPointer(3, GL_FLOAT, 0, vertices.data());
+  glNormalPointer(GL_FLOAT, 0, normals.data());
 
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   glEnable(GL_POLYGON_OFFSET_FILL);
   glPolygonOffset(1, 1);
   glColor3f(0, 0, 1);
-  glDrawElements(GL_TRIANGLES, triangles.size() * 3, GL_UNSIGNED_INT, triangles.data());
+  glDrawElements(GL_TRIANGLES, total_vx, GL_UNSIGNED_INT, triangles.data());
   glDisable(GL_POLYGON_OFFSET_FILL);
 
   // Draw wireframe
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   glColor3f(0, 0, 0);
   //glEnable(GL_LINE_SMOOTH);
-  glDrawElements(GL_TRIANGLES, triangles.size() * 3, GL_UNSIGNED_INT, triangles.data());
+  glDrawElements(GL_TRIANGLES, total_vx, GL_UNSIGNED_INT, triangles.data());
+}
 
+void draw_vertex_normals(
+  const vector<vec3f>& vertices,
+  const vector<vec3f>& normals)
+{
   glBegin(GL_LINES);
   for (int i = 0; i < normals.size(); i++) {
     auto& v = vertices[i];
@@ -123,4 +137,64 @@ void HW3Window::onDraw() {
     glVertex3f(n[0], n[1], n[2]);
   }
   glEnd();
+}
+
+// axis should be 1x3 matrix. axis' last should be zero.
+matrix<float> axis_rotate(vec3f axis, float rad) {
+  auto n = normalize(axis);
+  matrix<float> norm { {n[0], n[1], n[2]} };
+  auto proj = norm.transpose() * norm;
+  auto iden = matrix<float>(3, 1.f);
+  auto dual = matrix<float>{
+    {0, -norm[0][2], norm[0][1]},
+    {norm[0][2], 0, -norm[0][0]},
+    {-norm[0][1], norm[0][0], 0},
+  };
+  return proj + cos(rad) * (iden - proj) + sin(rad) * dual;
+}
+
+void HW3Window::onDraw() {
+  draw_background();
+
+  glPointSize(10.f);
+  glBegin(GL_POINTS);
+  matrix<float> init{ { 0 },{ 8 },{ 0 } };
+  init *= 0.3f;
+  vec3f axis{ { 1, 1, 1 } };
+  double off_dir = secDir < 0 ? -secDir : glfwGetTime() - secDir;
+  auto pos_dir = axis_rotate(axis, off_dir * 0.5f * PI) * init;
+  glVertex3f(pos_dir[0][0], pos_dir[1][0], pos_dir[2][0]);
+  cout << pos_dir[0][0] << ' ' << pos_dir[1][0] << ' ' <<  pos_dir[2][0] << endl;
+  glEnd();
+
+  glEnable(GL_LIGHTING);
+  glEnable(GL_COLOR_MATERIAL);
+  glEnable(GL_NORMALIZE);
+
+  GLfloat ambient[4] = { 0.1f, 0.1f, 0.1f, 1.f };
+  GLfloat diffuse[4] = { 1, 1, 1, 1 };
+  GLfloat null[4] = { 0, 0, 0, 0 };
+  GLfloat lightPos[4] = { pos_dir[0][0], pos_dir[1][0], pos_dir[2][0], 0 };
+  GLfloat direction[4] = { -1,-1,-1,0 };
+
+  glEnable(GL_LIGHT0);
+  glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
+  glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
+  glLightfv(GL_LIGHT0, GL_SPECULAR, null);
+  glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+
+  GLfloat specular[4] = { 1,1,1,1 };
+
+  //glEnable(GL_LIGHT1);
+  //glLightfv(GL_LIGHT1, GL_SPECULAR, specular);
+  //glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, direction);
+
+  GLfloat mat_ambient[4] = { 0.3,0.3,1,1 };
+  GLfloat mat_diffuse[4] = { 0.6,0.6,0.6,1 };
+
+  glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+  //glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+
+  draw_model(vertices, normals, triangles);
+  draw_vertex_normals(vertices, normals);
 }

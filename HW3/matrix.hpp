@@ -228,6 +228,8 @@ public:
   matrix<T>& operator -=(const matrix<T>& other);
   matrix<T>& operator *=(const matrix<T>& other);
   matrix<T>& operator /=(const matrix<T>& other);
+  matrix<T>& operator *=(const T& other);
+  matrix<T>& operator /=(const T& other);
 
   // Comparison operators
   friend bool operator ==(const matrix<T>& a, const matrix<T>& b);
@@ -820,27 +822,33 @@ matrix<T>& matrix<T>::operator =(matrix<T> && other)
 }
 
 template <typename T>
-matrix<T>& matrix<T>::operator +=(const matrix<T>& other)
-{
+matrix<T>& matrix<T>::operator +=(const matrix<T>& other) {
   return *this = *this + other;
 }
 
 template <typename T>
-matrix<T>& matrix<T>::operator -=(const matrix<T>& other)
-{
+matrix<T>& matrix<T>::operator -=(const matrix<T>& other) {
   return *this = *this - other;
 }
 
 template <typename T>
-matrix<T>& matrix<T>::operator *=(const matrix<T>& other)
-{
+matrix<T>& matrix<T>::operator *=(const matrix<T>& other) {
   return *this = *this * other;
 }
 
 template <typename T>
-matrix<T>& matrix<T>::operator /=(const matrix<T>& other)
-{
+matrix<T>& matrix<T>::operator /=(const matrix<T>& other) {
   return *this = *this / other;
+}
+
+template <typename T>
+matrix<T>& matrix<T>::operator *=(const T& mul) {
+  return *this = *this * mul;
+}
+
+template <typename T>
+matrix<T>& matrix<T>::operator /=(const T& div) {
+  return *this = *this / div;
 }
 
 template <typename T>

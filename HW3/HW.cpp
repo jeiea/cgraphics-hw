@@ -45,12 +45,11 @@ void HWWindow::onResize(int width, int height) {
 
   // Enable perspective projection
   double distance = 8;
-  //double zNear = distance + 4, zFar = zNear + 8;
-  gluPerspective(45.0, aspect, distance, distance * 2);
+  gluPerspective(45.0, aspect, distance, distance * 6);
   gluLookAt(distance, distance, distance, 0, 0, 0, -1, 1, -1);
 }
 
-void drawAxes() {
+void draw_axes() {
   glBegin(GL_LINES);
   glColor3f(1.0f, 0.0f, 0.0f);
   glVertex3f(0.0f, 0.0f, 0.0f);
@@ -64,12 +63,30 @@ void drawAxes() {
   glEnd();
 }
 
-void drawBackground() {
+void draw_background() {
   glClearColor(1, 1, 1, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
-  drawAxes();
+  draw_axes();
+}
+
+void draw_guide(float x, float y, float z) {
+  glBegin(GL_LINES);
+  glVertex3f(x, y, z);
+  glVertex3f(0, y, z);
+  //glVertex3f(x, y, z);
+  //glVertex3f(x, 0, z);
+  //glVertex3f(x, y, z);
+  //glVertex3f(x, y, 0);
+
+  //glVertex3f(x, y, z);
+  //glVertex3f(x, 0, 0);
+  //glVertex3f(x, y, z);
+  //glVertex3f(0, y, 0);
+  //glVertex3f(x, y, z);
+  //glVertex3f(0, 0, z);
+  glEnd();
 }

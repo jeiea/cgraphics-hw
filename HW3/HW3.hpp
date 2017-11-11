@@ -19,6 +19,11 @@ protected:
   vector<vec3f> normals;
   vector<vec3f> vertices;
 
+  // It is light's tick origin. Negative means animation off.
+  double secDir = 0;
+  double secPt = 0;
+  double secSpec = 0;
+
   void loadModel(const char* path);
   //void getFaceNormal(const trian& tri);
 };

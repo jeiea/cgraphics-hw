@@ -37,7 +37,7 @@ int loop(HWWindow& win) {
   {
     char buf[128];
     sprintf_s(buf, sizeof(buf), "Draw count: %d", ++count);
-    cout << buf << endl;
+    //cout << buf << endl;
 
     /* Render here */
     win.onDraw();
@@ -46,7 +46,7 @@ int loop(HWWindow& win) {
     glfwSwapBuffers(win);
 
     /* Poll for and process events */
-    glfwWaitEvents();
+    glfwPollEvents();
   }
 
   return win.exitMessage;

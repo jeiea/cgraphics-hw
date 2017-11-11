@@ -154,8 +154,8 @@ void HW2Window::onDraw() {
     auto& c = gridRB[dy < 0 ? gridRB.size() - i : i - 1];
     for (int j = 0; j < az; j++) {
       int rj = dz < 0 ? static_cast<int>(torus[0].size() - 1) - j : j;
-      if (c[dz < 0 ? c.size() - j - 1 : j]) glColor3f(1, 0, 0);
-      else glColor3f(0, 0, 1);
+      if (c[dz < 0 ? c.size() - j - 1 : j]) glColor3f(0, 0, 1);
+      else glColor3f(1, 0, 0);
       glVertexMat(l[rj]);
       glVertexMat(r[rj]);
       glVertexMat(l[rj + dz]);

@@ -1,12 +1,11 @@
 #pragma once
-#include <valarray>
-#include <vector>
+#include <array>
 #include "HW.hpp"
 
 using namespace std;
 
-using point3 = valarray<float>;
-using trian = valarray<int>;
+using vec3f = array<float, 3>;
+using vec3i = array<int, 3>;
 
 class HW3Window : public HWWindow {
 public:
@@ -16,10 +15,10 @@ public:
   virtual void onDraw();
 
 protected:
-  vector<trian> triangles;
-  vector<point3> normals;
-  vector<point3> vertices;
+  vector<vec3i> triangles;
+  vector<vec3f> normals;
+  vector<vec3f> vertices;
 
   void loadModel(const char* path);
-  void getFaceNormal(const trian& tri);
+  //void getFaceNormal(const trian& tri);
 };

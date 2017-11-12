@@ -117,7 +117,6 @@ load_ply(const char* path) {
 HW3Window::HW3Window() : HWWindow(title, 640, 480) {
   onResize(640, 480);
 
-  //loadModel("bunny.txt");
   tie(vertices, triangles, normals) = load_ply("bun_zipper_res4.ply");
   const float mag = 40.f;
   for (auto& v : vertices) {
@@ -126,43 +125,6 @@ HW3Window::HW3Window() : HWWindow(title, 640, 480) {
     v[2] *= mag;
     v[1] -= mag / 10.f;
   }
-}
-
-void HW3Window::loadModel(const char* path) {
-  auto f = ifstream(path);
-  if (!f) return;
-
-  int ver_count, tri_count;
-  f >> ver_count >> tri_count;
-
-  vertices.reserve(ver_count);
-  const float zoom = 10.0f;
-  for (int i = 0; i < ver_count; i++) {
-    float x, y, z;
-    if (!(f >> x >> y >> z)) break;
-    vertices.emplace_back(vec3f{ (x - 1.f) * zoom, y * zoom, z * zoom });
-    //vertices.emplace_back(vec3f{ x, y, z });
-  }
-
-  triangles.reserve(tri_count);
-  normals.resize(ver_count);
-  for (int i = 0; i < tri_count; i++) {
-    int a, b, c;
-    if (!(f >> a >> b >> c)) break;
-
-    vec3i triangle{ a - 1, b - 1, c - 1 };
-    triangles.push_back(triangle);
-
-    // normal accumulation
-    auto normal = normalize(face_normal(vertices, triangle));
-    for (auto vi : triangle) {
-      auto& n = normals[vi];
-      transform(begin(n), end(n), begin(normal), begin(n), plus<>());
-    }
-  }
-
-  auto bn = begin(normals);
-  transform(bn, end(normals), bn, normalize);
 }
 
 void HW3Window::onKeyInput(int key, int action) {

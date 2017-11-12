@@ -25,7 +25,4 @@ protected:
   double secSpot = 0;
   double secCutOff = 0;
   double secShiny = 0;
-
-  void loadModel(const char* path);
-  //void getFaceNormal(const trian& tri);
 };

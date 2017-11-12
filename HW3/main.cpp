@@ -58,6 +58,7 @@ int main() {
     cerr << "OpenGL 초기화에 실패했습니다." << endl;
     return -1;
   }
+  iostream::sync_with_stdio(false);
 
   for (int kind = 3; kind > 0;) {
     switch (kind) {

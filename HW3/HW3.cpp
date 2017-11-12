@@ -52,6 +52,7 @@ void HW3Window::loadModel(const char* path) {
     float x, y, z;
     if (!(f >> x >> y >> z)) break;
     vertices.emplace_back(vec3f{ (x - 1.f) * zoom, y * zoom, z * zoom });
+    //vertices.emplace_back(vec3f{ x, y, z });
   }
 
   triangles.reserve(tri_count);
@@ -71,26 +72,30 @@ void HW3Window::loadModel(const char* path) {
     }
   }
 
-  // normal average & offset
-  for (int i = 0; i < normals.size(); i++) {
-    auto& n = normals[i];
-    auto& v = vertices[i];
-    n = normalize(n);
-    n[0] += v[0];
-    n[1] += v[1];
-    n[2] += v[2];
-  }
+  auto bn = begin(normals);
+  transform(bn, end(normals), bn, normalize);
 }
 
 void HW3Window::onKeyInput(int key, int action) {
   HWWindow::onKeyInput(key, action);
+  if (action != GLFW_PRESS) return;
 
+  auto t = glfwGetTime();
   switch (key) {
   case GLFW_KEY_P:
+    secPt = secPt < 0 ? t + secPt : -(t - secPt);
+    break;
   case GLFW_KEY_D:
+    secDir = secDir < 0 ? t + secDir : -(t - secDir);
+    break;
   case GLFW_KEY_S:
+    secSpot = secSpot < 0 ? t + secSpot : -(t - secSpot);
+    break;
   case GLFW_KEY_C:
+    secCutOff = secCutOff < 0 ? t + secCutOff : -(t - secCutOff);
+    break;
   case GLFW_KEY_N:
+    secShiny = secShiny < 0 ? t + secShiny : -(t - secShiny);
     break;
   }
 }
@@ -134,7 +139,7 @@ void drawVertexNormals(
     auto& v = vertices[i];
     auto& n = normals[i];
     glVertex3f(v[0], v[1], v[2]);
-    glVertex3f(n[0], n[1], n[2]);
+    glVertex3f(v[0] + n[0], v[1] + n[1], v[2] + n[2]);
   }
   glEnd();
 }
@@ -142,7 +147,7 @@ void drawVertexNormals(
 // axis should be 1x3 matrix. axis' last should be zero.
 matrix<float> axis_rotate(vec3f axis, float rad) {
   auto n = normalize(axis);
-  matrix<float> norm { {n[0], n[1], n[2]} };
+  matrix<float> norm{ {n[0], n[1], n[2]} };
   auto proj = norm.transpose() * norm;
   auto iden = matrix<float>(3, 1.f);
   auto dual = matrix<float>{
@@ -153,48 +158,81 @@ matrix<float> axis_rotate(vec3f axis, float rad) {
   return proj + cos(rad) * (iden - proj) + sin(rad) * dual;
 }
 
-void HW3Window::onDraw() {
-  drawBackground();
-
-  glPointSize(10.f);
-  glBegin(GL_POINTS);
+vec3f swing(float sec) {
   matrix<float> init{ { 0 },{ 8 },{ 0 } };
   vec3f axis{ { 1, 1, 1 } };
-  double off_dir = secDir < 0 ? -secDir : glfwGetTime() - secDir;
+  double off_dir = sec < 0 ? -sec : glfwGetTime() - sec;
   auto pos_dir = axis_rotate(axis, off_dir * 0.5f * PI) * init;
-  glVertex3f(pos_dir[0][0], pos_dir[1][0], pos_dir[2][0]);
-  cout << pos_dir[0][0] << ' ' << pos_dir[1][0] << ' ' <<  pos_dir[2][0] << endl;
-  glEnd();
+  return { pos_dir[0][0], pos_dir[1][0], pos_dir[2][0] };
+}
+
+// Negative period means discontinuous animations.
+// Negative offset means stop state.
+// It returns [0, 1] value.
+float tween(float period, float offset) {
+  float cont = period < 0.f ? 1.f : 2.f;
+  float diff = abs(offset < 0.f ? offset : glfwGetTime() - offset);
+  float val = fmod(diff * cont, period * cont);
+  val = val < period ? val : period * 2 - val;
+  return val / period;
+}
+
+void HW3Window::onDraw() {
+  drawBackground();
 
   glEnable(GL_LIGHTING);
   glEnable(GL_COLOR_MATERIAL);
   glEnable(GL_NORMALIZE);
 
+  GLfloat full[4]{ 1, 1, 1, 1 };
+  GLfloat null[4]{ 0, 0, 0, 0 };
+  auto point_pos = swing(secPt);
+  GLfloat point_lit_pos[4]{ point_pos[0], point_pos[1], point_pos[2], 1 };
+
+  glEnable(GL_LIGHT0);
+  glLightfv(GL_LIGHT0, GL_SPECULAR, null);
+  glLightfv(GL_LIGHT0, GL_DIFFUSE, full);
+  glLightfv(GL_LIGHT0, GL_POSITION, point_lit_pos);
+  glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 128.f);
+
+  //glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 1.f);
+  //glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 1.f);
+  //glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 1.f);
+
   GLfloat ambient[4] = { 0.1f, 0.1f, 0.1f, 1 };
-  GLfloat diffuse[4] = { 0.5f, 0.5f, 0.5f, 1 };
-  GLfloat null[4] = { 0, 0, 0, 0 };
-  GLfloat lit_pos[4] = { pos_dir[0][0], pos_dir[1][0], pos_dir[2][0], 0 };
+  GLfloat diffuse[4] = { 1, 1, 1, 1 };
+  auto dir_pos = swing(secDir);
+  GLfloat directional_lit_pos[4] = { dir_pos[0], dir_pos[1], dir_pos[2], 0 };
 
-  //glEnable(GL_LIGHT0);
-  //glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
-  //glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
-  //glLightfv(GL_LIGHT0, GL_SPECULAR, null);
-  //glLightfv(GL_LIGHT0, GL_POSITION, lit_pos);
+  //glEnable(GL_LIGHT1);
+  glLightfv(GL_LIGHT1, GL_AMBIENT, ambient);
+  glLightfv(GL_LIGHT1, GL_DIFFUSE, diffuse);
+  glLightfv(GL_LIGHT1, GL_POSITION, directional_lit_pos);
 
-  GLfloat specular[4] = { 1, 1, 1, 1 };
-  GLfloat direction[4] = { -1,-1,-1,0 };
+  auto spot_pos = swing(secSpot);
+  GLfloat spot_lit_pos[4] = { spot_pos[0], spot_pos[1], spot_pos[2], 1 };
+  GLfloat spot_dir[4] = { -spot_pos[0], -spot_pos[1], -spot_pos[2], 1 };
 
-  glEnable(GL_LIGHT1);
-  glLightfv(GL_LIGHT1, GL_SPECULAR, specular);
-  glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, direction);
-  glLightfv(GL_LIGHT1, GL_POSITION, lit_pos);
+  //glEnable(GL_LIGHT2);
+  glLightfv(GL_LIGHT2, GL_SPECULAR, full);
+  glLightfv(GL_LIGHT2, GL_DIFFUSE, full);
+  glLightfv(GL_LIGHT2, GL_POSITION, spot_lit_pos);
+  glLightfv(GL_LIGHT2, GL_SPOT_DIRECTION, spot_dir);
+  glLightf(GL_LIGHT2, GL_SPOT_CUTOFF, tween(4.f, secCutOff) * 30.f);
 
-  GLfloat mat_ambient[4] = { 0.3,0.3,1,1 };
-  GLfloat mat_diffuse[4] = { 0.6,0.6,0.6,1 };
+  GLfloat mat_diffuse[4] = { 0.6f, 0.6f, 0.6f, 1 };
+  GLfloat mat_specular[4] = { 0.6f, 0.6f, 0.6f, 1 };
 
-  glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+  //glLightModelfv(GL_LIGHT_MODEL_AMBIENT, null);
   glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+  glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+  glMaterialf(GL_FRONT, GL_SHININESS, tween(4.f, secShiny + 2.f) * 128.f);
 
   drawModel(vertices, normals, triangles);
+
+  glDisable(GL_LIGHTING);
+  glDisable(GL_COLOR_MATERIAL);
+  glDisable(GL_NORMALIZE);
+
   drawVertexNormals(vertices, normals);
 }

@@ -242,7 +242,6 @@ void HW3Window::onDraw() {
 
   glEnable(GL_LIGHTING);
   glEnable(GL_COLOR_MATERIAL);
-  glEnable(GL_NORMALIZE);
 
   GLfloat full[4]{ 1, 1, 1, 1 };
   GLfloat null[4]{ 0, 0, 0, 0 };

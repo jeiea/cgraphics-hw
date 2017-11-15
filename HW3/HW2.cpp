@@ -26,7 +26,7 @@ matrix<float> rotateY(float radian) {
   };
 }
 
-tuple<vertices, vertices, vertices, grid<bool>> prepare_torus() {
+vertices prepare_torus() {
   const int angleZ = 18;
   const int angleY = 36;
 
@@ -64,10 +64,15 @@ tuple<vertices, vertices, vertices, grid<bool>> prepare_torus() {
     }
   }
 
+  return bRing;
+}
+
+tuple<vertices, vertices, vector<vector<bool>>>
+prepare_normals(const vertices& torus) {
   vertices centers, normals;
   vector<vector<bool>> gridRB;
   auto eye = matrix<float>{ {8}, {8}, {8} };
-  for (auto l = bRing.begin(), r = l + 1; r != bRing.end(); l++, r++) {
+  for (auto l = torus.begin(), r = l + 1; r != torus.end(); l++, r++) {
     vector<matrix<float>>&& center{}, normal{};
     vector<bool>&& tfro{};
     auto lb = l->begin(), lt = lb + 1;
@@ -90,12 +95,13 @@ tuple<vertices, vertices, vertices, grid<bool>> prepare_torus() {
     gridRB.emplace_back(tfro);
   }
 
-  return make_tuple(bRing, centers, normals, gridRB);
+  return make_tuple(centers, normals, gridRB);
 }
 
 HW2Window::HW2Window() : HWWindow("HW2 - Drawing Torus", 640, 480) {
   HWWindow::onResize(640, 480);
-  tie(torus, centers, normals, gridRB) = prepare_torus();
+  torus = prepare_torus();
+  tie(centers, normals, gridRB) = prepare_normals(torus);
   sweepZ = static_cast<int>(torus[0].size()) - 1;
   sweepY = static_cast<int>(torus.size()) - 1;
 }

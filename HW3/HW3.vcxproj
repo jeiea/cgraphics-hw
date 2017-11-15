@@ -145,6 +145,7 @@
     <ClCompile Include="HW.cpp" />
     <ClCompile Include="HW2.cpp" />
     <ClCompile Include="HW3.cpp" />
+    <ClCompile Include="HW4.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -152,6 +153,7 @@
     <ClInclude Include="HW.hpp" />
     <ClInclude Include="HW2.hpp" />
     <ClInclude Include="HW3.hpp" />
+    <ClInclude Include="HW4.hpp" />
     <ClInclude Include="matrix.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,15 +1,14 @@
 #pragma once
 #include <vector>
-#include "matrix.hpp"
-#include "HW.hpp"
+#include "HW2.hpp"
 
 template <typename T>
 using grid = std::vector<std::vector<T>>;
 using vertices = grid<matrix<float>>;
 
-class HW2Window : public HWWindow {
+class HW4Window : public HWWindow {
 public:
-  HW2Window();
+  HW4Window();
 
   virtual void onKeyInput(int key, int action);
   virtual void onDraw();
@@ -22,6 +21,3 @@ protected:
   int sweepZ;
   int sweepY;
 };
-
-vertices prepare_torus();
-tuple<vertices, vertices, grid<bool>> prepare_normals(const vertices& torus);

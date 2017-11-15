@@ -30,6 +30,9 @@
     <ClInclude Include="HW.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="HW4.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="HW2.cpp">
@@ -42,6 +45,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="HW.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HW4.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

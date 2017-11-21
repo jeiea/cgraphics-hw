@@ -14,6 +14,7 @@ int APIENTRY _tWinMain(
 #include <iostream>
 #include "HW2.hpp"
 #include "HW3.hpp"
+#include "HW4.hpp"
 
 using namespace std;
 
@@ -60,13 +61,16 @@ int main() {
   }
   iostream::sync_with_stdio(false);
 
-  for (int kind = 3; kind > 0;) {
+  for (int kind = 4; kind > 0;) {
     switch (kind) {
     case 2:
       kind = loop(HW2Window());
       break;
     case 3:
       kind = loop(HW3Window());
+      break;
+    case 4:
+      kind = loop(HW4Window());
       break;
     default:
       kind = 0;

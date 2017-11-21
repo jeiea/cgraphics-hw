@@ -27,6 +27,7 @@ GLWindow::GLWindow(const char* title, int width, int height) {
 }
 
 void HWWindow::onKeyInput(int key, int action) {
+  if (glfwGetKey(*this, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) return;
   if (GLFW_KEY_F1 <= key && key <= GLFW_KEY_F12) {
     exitMessage = key - GLFW_KEY_F1 + 1;
     glfwSetWindowShouldClose(window, 1);

@@ -72,20 +72,20 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)GLFW;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)thirdparty;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)thirdparty;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)GLFW;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)thirdparty;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)thirdparty;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)GLFW;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)thirdparty;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)thirdparty;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(ProjectDir);$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)GLFW;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)thirdparty;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)thirdparty;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -149,7 +149,6 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GLFW\glfw3.h" />
     <ClInclude Include="HW.hpp" />
     <ClInclude Include="HW2.hpp" />
     <ClInclude Include="HW3.hpp" />

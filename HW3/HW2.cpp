@@ -1,7 +1,5 @@
 #include "HW2.hpp"
 
-const float PI = 3.141592653589793238462643383279502884f;
-
 matrix<float> scale(float mag) {
   return matrix<float> {
     { mag, 0 },
@@ -26,19 +24,20 @@ matrix<float> rotateY(float radian) {
   };
 }
 
-vertices prepare_torus() {
-  const int angleZ = 18;
-  const int angleY = 36;
-
-  vector<matrix<float>> sRing;
+/**
+ * Generate redundant vertices set.
+ * Returns [z + 1][y + 1] array.
+ */
+vertices prepare_torus(int angleZ, int angleY) {
+  vector<matrix<float>> small;
   {
-    sRing.reserve(angleZ);
-    sRing.emplace_back(matrix<float>{ { 1 }, { 0 } });
+    small.reserve(angleZ);
+    small.emplace_back(matrix<float>{ { 1 }, { 0 } });
     auto rotSmall = rotate2x2(2 * PI / angleZ);
     for (int i = 1; i <= angleZ; i++)
-      sRing.emplace_back(rotSmall * *sRing.rbegin());
-    auto b = sRing.begin();
-    auto e = sRing.end();
+      small.emplace_back(rotSmall * *small.rbegin());
+    auto b = small.begin();
+    auto e = small.end();
     auto toRightUp = [=](matrix<float>& mat) {
       return matrix<float> {
         { mat[0][0] + 2.f },
@@ -48,23 +47,23 @@ vertices prepare_torus() {
     transform(b, e, b, toRightUp);
   }
 
-  vertices bRing;
+  vertices big;
   {
-    bRing.reserve(angleY);
-    bRing.push_back(sRing);
+    big.reserve(angleY);
+    big.push_back(small);
     auto rotBig = rotateY(2 * PI / angleY);
     auto rotater = [=](matrix<float>& o) { return rotBig * o; };
     for (int i = 1; i <= angleY; i++) {
-      auto& last = *bRing.rbegin();
-      auto beg = last.begin();
-      auto end = last.end();
+      auto& last = *rbegin(big);
+      auto bg = begin(last);
+      auto nd = end(last);
       vector<matrix<float>>&& next{};
-      transform(beg, end, back_inserter(next), rotater);
-      bRing.emplace_back(next);
+      transform(bg, nd, back_inserter(next), rotater);
+      big.emplace_back(next);
     }
   }
 
-  return bRing;
+  return big;
 }
 
 tuple<vertices, vertices, vector<vector<bool>>>
@@ -100,7 +99,7 @@ prepare_normals(const vertices& torus) {
 
 HW2Window::HW2Window() : HWWindow("HW2 - Drawing Torus", 640, 480) {
   HWWindow::onResize(640, 480);
-  torus = prepare_torus();
+  torus = prepare_torus(18, 36);
   tie(centers, normals, gridRB) = prepare_normals(torus);
   sweepZ = static_cast<int>(torus[0].size()) - 1;
   sweepY = static_cast<int>(torus.size()) - 1;

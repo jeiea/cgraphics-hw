@@ -1,10 +1,8 @@
 #pragma once
-#include <vector>
 #include "HW2.hpp"
+#include "HW3.hpp"
 
-template <typename T>
-using grid = std::vector<std::vector<T>>;
-using vertices = grid<matrix<float>>;
+using vec4i = array<int, 4>;
 
 class HW4Window : public HWWindow {
 public:
@@ -14,10 +12,7 @@ public:
   virtual void onDraw();
 
 protected:
-  static vertices torus;
-  static vertices centers;
-  static vertices normals;
-  static grid<bool> gridRB;
-  int sweepZ;
-  int sweepY;
+  vector<vec3f> torus;
+  vector<vec3f> normals;
+  unsigned tex_id;
 };

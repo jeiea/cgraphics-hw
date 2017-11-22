@@ -137,17 +137,13 @@ void HW4Window::onDraw() {
   else glEnable(GL_DEPTH_TEST);
 
   drawBackground();
-  glColor3f(1, 1, 1);
 
   glEnable(GL_TEXTURE_2D);
-
   glEnable(GL_LIGHTING);
-
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   GLfloat full[4]{ 1, 1, 1, 1 };
-  GLfloat null[4]{ 0, 0, 0, 0 };
   GLfloat point_lit_pos[4]{ 4, 4, 2, 1 };
 
   glEnable(GL_LIGHT0);

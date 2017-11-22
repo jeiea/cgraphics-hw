@@ -14,6 +14,11 @@ public:
 protected:
   vector<vec3f> torus;
   vector<vec3f> normals;
+  vector<vec3f> i_normals;
+  vector<int> indices;
   unsigned tex_id;
   bool tex_alpha;
+  // positive means absolute time
+  // negative means time offset
+  double animation = 0.0;
 };

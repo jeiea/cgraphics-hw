@@ -25,7 +25,10 @@ unsigned readTexture(const char* path, int w, int h, int format) {
       auto p = raw.begin() + i * w * 4;
       for (int j = 0; j < w; j++) {
         int alpha = f.get();
-        *p++ = *p++ = *p++ = *p++ = alpha;
+        //*p++ = *p++ = *p++ = *p++ = alpha;
+        // Below is nicer.
+        *p++ = *p++ = *p++ = 0;
+        *p++ = alpha;
       }
     }
     format = GL_RGBA;
@@ -35,12 +38,31 @@ unsigned readTexture(const char* path, int w, int h, int format) {
   glGenTextures(1, &id);
 
   glBindTexture(GL_TEXTURE_2D, id);
-  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   glTexImage2D(GL_TEXTURE_2D, 0, format, w, h, 0, format, GL_UNSIGNED_BYTE, raw.data());
 
   return id;
+}
+
+vector<vec3f> torus_zero_adjust(vector<vec3f>&& torus) {
+  const auto lenZ = angleZ + 1;
+
+  auto bg = begin(torus);
+  auto nb = bg + lenZ * 10;
+  auto ne = end(torus) - lenZ;
+  rotate(bg, nb, ne);
+  for (int i = 0; i < angleY; i++) {
+    auto b2 = bg + i * lenZ;
+    rotate(b2, b2 + lenZ / 2, b2 + angleZ);
+    *(b2 + angleZ) = *b2;
+  }
+  copy(bg, bg + lenZ, ne);
+
+  return torus;
 }
 
 HW4Window::HW4Window() : HWWindow("HW4 - Texture Mapping", 640, 480) {
@@ -50,6 +72,7 @@ HW4Window::HW4Window() : HWWindow("HW4 - Texture Mapping", 640, 480) {
   for (auto& small : prepare_torus(angleZ, angleY))
     for (auto& v : small)
       torus.emplace_back(vec3f{ v[0][0], v[1][0], v[2][0] });
+  torus = torus_zero_adjust(move(torus));
 
   vector<matrix<float>> small;
   small.reserve(angleZ);
@@ -75,6 +98,7 @@ HW4Window::HW4Window() : HWWindow("HW4 - Texture Mapping", 640, 480) {
   }
 
   tex_id = readTexture("Material/check.raw", 512, 512, GL_RGB);
+  tex_alpha = false;
 }
 
 void HW4Window::onKeyInput(int key, int action)
@@ -86,21 +110,27 @@ void HW4Window::onKeyInput(int key, int action)
   switch (key) {
   case GLFW_KEY_S:
     tex_id = readTexture("Material/wood.raw", 512, 512, GL_RGB);
+    tex_alpha = false;
     break;
   case GLFW_KEY_T:
     tex_id = readTexture("Material/check.raw", 512, 512, GL_RGB);
+    tex_alpha = false;
     break;
   case GLFW_KEY_U:
     tex_id = readTexture("Material/donut.raw", 512, 512, GL_RGB);
+    tex_alpha = false;
     break;
   case GLFW_KEY_V:
     tex_id = readTexture("Material/marble.raw", 512, 512, GL_RGB);
+    tex_alpha = false;
     break;
   case GLFW_KEY_W:
     tex_id = readTexture("Material/logo2.raw", 512, 512, GL_RED);
+    tex_alpha = true;
     break;
   case GLFW_KEY_X:
     tex_id = readTexture("Material/grayscale_ornament.raw", 512, 512, GL_RED);
+    tex_alpha = true;
     break;
   default:
     return;
@@ -108,63 +138,25 @@ void HW4Window::onKeyInput(int key, int action)
   glDeleteTextures(1, &old_tex_id);
 }
 
-void test(GLuint tex_id) {
-  glEnable(GL_TEXTURE_2D);
-  glEnableClientState(GL_VERTEX_ARRAY);
-  //glEnableClientState(GL_NORMAL_ARRAY);
-  //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-  glPointSize(10);
-  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-  //glColor4f(0, 0, 0, -1);
-  glColor3f(1, 1, 1);
-  glBindTexture(GL_TEXTURE_2D, tex_id);
-  array<float, 12> tmp_vx{ {
-      0.f, 2.f, 2.f, // lt
-      0.f, 0.f, 2.f, // lb
-      2.f, 0.f, 0.f, // rb
-      2.f, 2.f, 0.f, // rt
-  } };
-  glVertexPointer(3, GL_FLOAT, 0, tmp_vx.data());
-
-  array<float, 8> tex_vx{ {
-      0.f, 1.f,
-      0.f, 0.f,
-      1.f, 0.f,
-      1.f, 1.f,
-  } };
-  glTexCoordPointer(2, GL_FLOAT, 0, tex_vx.data());
-
-  array<int, 10> poly{ {
-      0, 1, 2, 3, 0, 2
-  } };
-  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, poly.data());
-
-  glDisable(GL_TEXTURE_2D);
-}
-
 void HW4Window::onDraw() {
   drawBackground();
-
-  test(tex_id);
-  return;
+  glColor3f(1, 1, 1);
 
   glEnable(GL_TEXTURE_2D);
-  //glEnable(GL_DEPTH_TEST);
-  //glEnable(GL_LIGHTING);
-  //glEnable(GL_COLOR_MATERIAL);
+  if (tex_alpha) glDisable(GL_DEPTH_TEST);
+  else glEnable(GL_DEPTH_TEST);
 
-  glFrontFace(GL_CCW);
-  //glEnable(GL_CULL_FACE);
+  glEnable(GL_LIGHTING);
+  glEnable(GL_COLOR_MATERIAL);
+
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
 
   GLfloat full[4]{ 1, 1, 1, 1 };
   GLfloat null[4]{ 0, 0, 0, 0 };
   GLfloat point_lit_pos[4]{ 4, 4, 2, 1 };
 
-  //glEnable(GL_LIGHT0);
+  glEnable(GL_LIGHT0);
   glLightfv(GL_LIGHT0, GL_SPECULAR, full);
   glLightfv(GL_LIGHT0, GL_DIFFUSE, full);
   glLightfv(GL_LIGHT0, GL_POSITION, point_lit_pos);
@@ -179,22 +171,27 @@ void HW4Window::onDraw() {
   glVertexPointer(3, GL_FLOAT, 0, torus.data());
   glNormalPointer(GL_FLOAT, 0, normals.data());
 
-  const int lenZ = angleZ + 1;
   const int lenY = angleY + 1;
+  const int lenZ = angleZ + 1;
 
-  array<float, lenZ * lenY * 2> tex;
+  array<float, lenY * lenZ * 2> tex;
   {
     auto p = begin(tex);
-    for (float i = 0; i < 18; i++) {
+    //auto t = 
+    auto u = glfwGetTime() * 0.3;
+    auto v = glfwGetTime() * 0.11;
+    for (float i = 0; i < lenY; i++) {
       for (float j = 0; j < lenZ; j++) {
-        *p++ = i / angleY;
-        *p++ = j / angleZ;
+        //*p++ = i / angleY;
+        //*p++ = j / angleZ;
+        *p++ = i / angleY + u;
+        *p++ = j / angleZ + v;
       }
     }
   }
-
   glEnableClientState(GL_TEXTURE_COORD_ARRAY);
   glTexCoordPointer(2, GL_FLOAT, 0, tex.data());
+
   //glBindTexture(GL_TEXTURE_2D, 0);
   glBindTexture(GL_TEXTURE_2D, tex_id);
 

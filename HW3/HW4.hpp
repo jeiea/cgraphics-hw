@@ -15,4 +15,5 @@ protected:
   vector<vec3f> torus;
   vector<vec3f> normals;
   unsigned tex_id;
+  bool tex_alpha;
 };

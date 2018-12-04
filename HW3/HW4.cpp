@@ -15,16 +15,18 @@ unsigned readTexture(const char* path, int w, int h, int format) {
     return -1;
   }
 
+  ptrdiff_t zh = h;
+  ptrdiff_t zw = w;
   if (format == GL_RGB) {
-    raw.resize(h * w * 3);
+    raw.resize(zh * zw * 3);
     for (int i = h - 1; i >= 0; i--) {
-      f.read(reinterpret_cast<char*>(raw.data()) + i * w * 3, w * 3);
+      f.read(reinterpret_cast<char*>(raw.data()) + i * zw * 3, zw * 3);
     }
   }
   else {
-    raw.resize(h * w * 4);
+    raw.resize(zh * zw * 4);
     for (int i = h - 1; i >= 0; i--) {
-      auto p = raw.begin() + i * w * 4;
+      auto p = raw.begin() + i * zw * 4;
       for (int j = 0; j < w; j++) {
         int alpha = f.get();
         *p++ = *p++ = *p++ = *p++ = alpha;
@@ -82,7 +84,7 @@ HW4Window::HW4Window() : HWWindow("HW4 - Texture Mapping (Z to animate)", 640, 4
   }
 
   indices.resize(lenZ * angleY * 2);
-  for (int i = 0; i < lenZ * angleY; i++) {
+  for (ptrdiff_t i = 0; i < lenZ * angleY; i++) {
     indices[2 * i + 0] = i;
     indices[2 * i + 1] = i + lenZ;
   }

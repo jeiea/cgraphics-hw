@@ -152,13 +152,13 @@ void HW2Window::onDraw() {
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   glEnable(GL_POLYGON_OFFSET_FILL);
   glPolygonOffset(1, 1);
-  for (int i = 1; i <= ay; i++) {
+  for (ptrdiff_t i = 1; i <= ay; i++) {
     glBegin(GL_QUAD_STRIP);
     auto& l = torus[dy < 0 ? torus.size() - i : i - 1];
     auto& r = torus[dy < 0 ? torus.size() - 1 - i : i];
     auto& c = gridRB[dy < 0 ? gridRB.size() - i : i - 1];
     for (int j = 0; j < az; j++) {
-      int rj = dz < 0 ? static_cast<int>(torus[0].size() - 1) - j : j;
+      size_t rj = dz < 0 ? torus[0].size() - 1 - j : j;
       if (c[dz < 0 ? c.size() - j - 1 : j]) glColor3f(0, 0, 1);
       else glColor3f(1, 0, 0);
       glVertexMat(l[rj]);
@@ -180,7 +180,7 @@ void HW2Window::onDraw() {
   glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
   glColor3f(0, 0, 0);
-  for (int i = 1; i <= ay; i++) {
+  for (ptrdiff_t i = 1; i <= ay; i++) {
     glBegin(GL_QUAD_STRIP);
     auto& l = torus[dy < 0 ? torus.size() - i : i - 1];
     auto& r = torus[dy < 0 ? torus.size() - 1 - i : i];
